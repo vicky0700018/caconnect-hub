@@ -124,3 +124,36 @@
     box-shadow: 0 0 0 1px var(--color-ring);
   }
 }
+
+@utility btn-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-brand);
+  color: var(--color-brand-foreground);
+  border: 1px solid var(--color-brand);
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: opacity 150ms ease;
+  &:hover {
+    opacity: 0.88;
+  }
+}
+
+@utility btn-ghost-line {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  transition: background-color 150ms ease;
+  &:hover {
+    background-color: var(--color-surface-2);
+  }
+}
