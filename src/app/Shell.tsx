@@ -59,7 +59,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function Header({ onMenu }: { onMenu: () => void }) {
+function Header({ onMenu, onLogout }: { onMenu: () => void; onLogout?: () => void }) {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/95 px-4 backdrop-blur lg:px-8">
       <button
@@ -83,6 +83,14 @@ function Header({ onMenu }: { onMenu: () => void }) {
           ST
         </span>
         <span className="hidden text-[13px] text-foreground sm:inline">Sthambhalliance</span>
+        {onLogout ? (
+          <button
+            onClick={onLogout}
+            className="rounded border border-border px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            Logout
+          </button>
+        ) : null}
       </div>
     </header>
   );
@@ -128,7 +136,7 @@ function Body() {
   }
 }
 
-function Frame() {
+function Frame({ onLogout }: { onLogout?: () => void }) {
   const [menu, setMenu] = useState(false);
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -144,7 +152,7 @@ function Frame() {
         </div>
       ) : null}
       <div className="lg:pl-52 xl:pl-60">
-        <Header onMenu={() => setMenu(true)} />
+        <Header onMenu={() => setMenu(true)} onLogout={onLogout} />
         <main className="px-4 py-6 lg:px-8 lg:py-8">
           <Body />
         </main>
@@ -154,10 +162,10 @@ function Frame() {
   );
 }
 
-export default function Shell() {
+export default function Shell({ onLogout }: { onLogout?: () => void }) {
   return (
     <StoreProvider>
-      <Frame />
+      <Frame onLogout={onLogout} />
     </StoreProvider>
   );
 }
