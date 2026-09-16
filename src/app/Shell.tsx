@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { NAV, StoreProvider, useStore, type Page } from "./store";
 import { Toasts } from "./ui";

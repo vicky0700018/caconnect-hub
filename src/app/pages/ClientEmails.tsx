@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { useStore } from "../store";
 import { Button, Card, EmptyState, PageHeader } from "../ui";
 
@@ -36,7 +38,7 @@ export default function ClientEmails() {
                   <p className="text-[12px] text-muted-foreground">{e.createdAt}</p>
                 </div>
                 <p className="text-[12px] text-muted-foreground">
-                  {e.client} · {e.topic}
+                  {e.client} Â· {e.topic}
                 </p>
                 <p className="mt-2 whitespace-pre-line text-[13px] text-muted-foreground">
                   {e.body}

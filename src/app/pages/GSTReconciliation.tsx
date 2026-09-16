@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { useState } from "react";
 import { formatINR } from "@/data/mockData";
 import { nextId, useStore } from "../store";
@@ -87,7 +89,7 @@ export default function GSTReconciliation() {
             <Field
               label="GSTR-2B JSON"
               required
-              helper="Download from the GST portal → Returns → GSTR-2B → Download JSON"
+              helper="Download from the GST portal â†’ Returns â†’ GSTR-2B â†’ Download JSON"
             >
               <FileInput fileName={json} onPick={setJson} />
             </Field>

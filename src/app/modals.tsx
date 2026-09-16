@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import * as M from "@/data/mockData";
 import { nextId, useStore } from "./store";
@@ -300,7 +302,7 @@ export function RequestDocsModal({
   const [days, setDays] = useState("30");
   const [error, setError] = useState("");
 
-  const useChecklist = (name: string) => {
+  const applyChecklist = (name: string) => {
     setTitle(name);
     setItems(
       (M.CHECKLISTS[name] ?? []).map((n) => ({
@@ -377,7 +379,7 @@ export function RequestDocsModal({
         </p>
         <div className="flex flex-wrap gap-2">
           {Object.keys(M.CHECKLISTS).map((c) => (
-            <Button key={c} size="sm" onClick={() => useChecklist(c)}>
+            <Button key={c} size="sm" onClick={() => applyChecklist(c)}>
               {c}
             </Button>
           ))}

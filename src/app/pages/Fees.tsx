@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { useState } from "react";
 import { formatINR } from "@/data/mockData";
 import { useStore } from "../store";
@@ -46,7 +48,7 @@ export default function Fees() {
         <Kpi label="Collected this month" value={formatINR(collected)} tone="success" />
         <Kpi label="Outstanding" value={formatINR(outstanding)} />
         <Kpi
-          label={`Overdue · ${overdueList.length}`}
+          label={`Overdue Â· ${overdueList.length}`}
           value={formatINR(overdueList.reduce((s, f) => s + f.amount, 0))}
           tone="danger"
         />
@@ -64,7 +66,7 @@ export default function Fees() {
                 <Th>Amount</Th>
                 <Th>Due</Th>
                 <Th>Status</Th>
-                <Th className="text-right">…</Th>
+                <Th className="text-right">â€¦</Th>
               </tr>
             </thead>
             <tbody>
@@ -76,7 +78,7 @@ export default function Fees() {
                   </Td>
                   <Td className="text-muted-foreground">{f.client}</Td>
                   <Td className="whitespace-nowrap">{formatINR(f.amount)}</Td>
-                  <Td className="whitespace-nowrap text-muted-foreground">{f.due || "—"}</Td>
+                  <Td className="whitespace-nowrap text-muted-foreground">{f.due || "â€”"}</Td>
                   <Td>
                     <Badge>{f.status}</Badge>
                   </Td>

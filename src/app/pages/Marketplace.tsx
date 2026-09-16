@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { useState } from "react";
 import { formatINR, packages, reviews } from "@/data/mockData";
 import { useStore } from "../store";
@@ -20,10 +22,10 @@ export default function Marketplace() {
     setBookings((bs) => bs.map((b) => (b.id === id ? { ...b, status } : b)));
     toast(
       status === "accepted"
-        ? "Booking accepted — client added to your list."
+        ? "Booking accepted â€” client added to your list."
         : status === "declined"
           ? "Booking declined."
-          : "Marked complete — the client can now leave a review.",
+          : "Marked complete â€” the client can now leave a review.",
     );
   };
 
@@ -48,7 +50,7 @@ export default function Marketplace() {
               <div>
                 <p className="font-serif text-xl text-foreground">Sthambhalliance</p>
                 <p className="text-muted-foreground">
-                  Chartered Accountants · Pune, Maharashtra · Practising since 2011
+                  Chartered Accountants Â· Pune, Maharashtra Â· Practising since 2011
                 </p>
               </div>
               <p className="max-w-2xl text-muted-foreground">
@@ -82,7 +84,7 @@ export default function Marketplace() {
                 <p className="text-[12px] text-muted-foreground">{p.turnaround}</p>
                 <ul className="mt-3 space-y-1 text-[13px] text-muted-foreground">
                   {p.includes.map((i) => (
-                    <li key={i}>· {i}</li>
+                    <li key={i}>Â· {i}</li>
                   ))}
                 </ul>
               </Card>
@@ -104,7 +106,7 @@ export default function Marketplace() {
                       ) : null}
                     </div>
                     <p className="mt-1 text-[13px] text-muted-foreground">
-                      {b.email} · {b.phone} · {b.city}
+                      {b.email} Â· {b.phone} Â· {b.city}
                     </p>
                     <p className="mt-2 text-[13px] text-foreground">{b.service}</p>
                     <p className="text-[12px] text-muted-foreground">{b.requestDate}</p>
@@ -120,7 +122,7 @@ export default function Marketplace() {
                       {formatINR(b.platformFee)} platform fee
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      from the client, not you · not charged yet
+                      from the client, not you Â· not charged yet
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2 sm:justify-end">
                       {b.status === "requested" ? (
@@ -156,7 +158,7 @@ export default function Marketplace() {
                   <p className="text-sm font-medium text-foreground">{r.author}</p>
                   <p className="text-[12px] text-muted-foreground">{r.date}</p>
                 </div>
-                <p className="text-warn">{"★".repeat(r.rating)}</p>
+                <p className="text-warn">{"â˜…".repeat(r.rating)}</p>
                 <p className="mt-2 text-[13px] text-muted-foreground">{r.text}</p>
               </Card>
             ))}

@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { formatINR } from "@/data/mockData";
 import { useStore } from "../store";
 import {

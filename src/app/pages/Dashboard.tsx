@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { useState } from "react";
 import { formatINR } from "@/data/mockData";
 import { useStore } from "../store";
@@ -29,7 +31,7 @@ export default function Dashboard() {
 
   const advance = (id: string, to: "In Progress" | "Filed") => {
     setDeadlines((ds) => ds.map((d) => (d.id === id ? { ...d, status: to } : d)));
-    toast(to === "Filed" ? "Marked as filed." : "Started — moved to in progress.");
+    toast(to === "Filed" ? "Marked as filed." : "Started â€” moved to in progress.");
   };
 
   return (
@@ -53,11 +55,11 @@ export default function Dashboard() {
 
       <div className="mb-5 space-y-2">
         <AlertBanner>
-          1 new demand raised this week · {formatINR(1317699.5)} outstanding across 10
+          1 new demand raised this week Â· {formatINR(1317699.5)} outstanding across 10
           clients
         </AlertBanner>
         <AlertBanner>
-          1 client short on advance tax · {formatINR(552500)} in interest exposure so far
+          1 client short on advance tax Â· {formatINR(552500)} in interest exposure so far
         </AlertBanner>
       </div>
 
@@ -79,7 +81,7 @@ export default function Dashboard() {
           </button>
         </div>
         <SectionBar>
-          Overdue · {overdue.length} · Past the due date — deal with these first
+          Overdue Â· {overdue.length} Â· Past the due date â€” deal with these first
         </SectionBar>
         <TableWrap>
           <tbody>
@@ -87,7 +89,7 @@ export default function Dashboard() {
               <tr key={d.id}>
                 <Td>
                   <div className="font-medium text-foreground">
-                    {d.task} — {d.period}
+                    {d.task} â€” {d.period}
                   </div>
                   <div className="text-[12px] text-muted-foreground">{d.client}</div>
                 </Td>

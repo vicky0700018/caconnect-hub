@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { useState } from "react";
 import { SERVICES } from "@/data/mockData";
 import { useStore } from "../store";
@@ -36,7 +38,7 @@ export default function Deadlines() {
 
   const advance = (id: string, to: "In Progress" | "Filed") => {
     setDeadlines((ds) => ds.map((d) => (d.id === id ? { ...d, status: to } : d)));
-    toast(to === "Filed" ? "Marked as filed." : "Started — moved to in progress.");
+    toast(to === "Filed" ? "Marked as filed." : "Started â€” moved to in progress.");
   };
 
   const rows = (list: typeof deadlines) =>
@@ -44,14 +46,14 @@ export default function Deadlines() {
       <tr key={d.id}>
         <Td>
           <div className="font-medium text-foreground">
-            {d.task} — {d.period}
+            {d.task} â€” {d.period}
           </div>
           <div className="text-[12px] text-muted-foreground">
-            {d.service} · {d.client}
+            {d.service} Â· {d.client}
           </div>
         </Td>
         <Td className="whitespace-nowrap text-danger">
-          {d.daysOverdue > 0 ? `${d.daysOverdue} days overdue` : "—"}
+          {d.daysOverdue > 0 ? `${d.daysOverdue} days overdue` : "â€”"}
         </Td>
         <Td className="whitespace-nowrap text-muted-foreground">{d.dueDate}</Td>
         <Td>
@@ -86,7 +88,7 @@ export default function Deadlines() {
     <>
       <PageHeader
         title="Deadlines"
-        subtitle={`${allOverdue} overdue · ${allOpen} open`}
+        subtitle={`${allOverdue} overdue Â· ${allOpen} open`}
         actions={
           <Button variant="primary" onClick={() => setOpen(true)}>
             + Add deadline
@@ -120,7 +122,7 @@ export default function Deadlines() {
 
       <Card className="mb-4">
         <SectionBar>
-          Overdue · {overdue.length} · Past the due date — deal with these first
+          Overdue Â· {overdue.length} Â· Past the due date â€” deal with these first
         </SectionBar>
         {overdue.length ? (
           <TableWrap>
@@ -132,7 +134,7 @@ export default function Deadlines() {
       </Card>
 
       <Card>
-        <SectionBar>Everything else · {others.length}</SectionBar>
+        <SectionBar>Everything else Â· {others.length}</SectionBar>
         {others.length ? (
           <TableWrap>
             <tbody>{rows(others)}</tbody>

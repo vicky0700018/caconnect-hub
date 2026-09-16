@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { useState } from "react";
 import { FINANCIAL_YEARS, formatINR } from "@/data/mockData";
 import { nextId, useStore } from "../store";
@@ -54,7 +56,7 @@ export default function AdvanceTax() {
     <>
       <PageHeader
         title="Advance Tax"
-        subtitle="An estimate per client per year, checked against the four statutory dates — 15% by 15 Jun, 45% by 15 Sep, 75% by 15 Dec, 100% by 15 Mar."
+        subtitle="An estimate per client per year, checked against the four statutory dates â€” 15% by 15 Jun, 45% by 15 Sep, 75% by 15 Dec, 100% by 15 Mar."
       />
 
       <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -65,7 +67,7 @@ export default function AdvanceTax() {
           tone="danger"
         />
         <Kpi label="Due within 7 days" value={0} />
-        <Kpi label="Next installment, firm-wide" value="—" />
+        <Kpi label="Next installment, firm-wide" value="â€”" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
@@ -84,9 +86,9 @@ export default function AdvanceTax() {
               <Select value={fy} onChange={setFy} options={FINANCIAL_YEARS} />
             </Field>
             <Field
-              label="Estimated tax liability for the year (₹)"
+              label="Estimated tax liability for the year (â‚¹)"
               required
-              helper="After TDS/TCS already credited elsewhere — the net figure advance tax is actually computed on. Applies once this exceeds ₹10,000 (s.208)."
+              helper="After TDS/TCS already credited elsewhere â€” the net figure advance tax is actually computed on. Applies once this exceeds â‚¹10,000 (s.208)."
             >
               <TextInput
                 value={amount}

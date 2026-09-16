@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { useState } from "react";
 import { formatINR } from "@/data/mockData";
 import { useStore } from "../store";
@@ -34,7 +36,7 @@ export default function IncomeTax() {
     }
     setError("");
     setDemands((ds) => ds.map((d) => ({ ...d, amount: d.amount })));
-    toast(`${file} imported — outstanding demands refreshed.`);
+    toast(`${file} imported â€” outstanding demands refreshed.`);
     setFile("");
   };
 
@@ -47,7 +49,7 @@ export default function IncomeTax() {
 
       <div className="mb-5">
         <AlertBanner tone="info">
-          Automated sync is not connected. The Income Tax Department has no public API — the
+          Automated sync is not connected. The Income Tax Department has no public API â€” the
           lawful automated route is ERI registration, which a firm applies for separately. Until
           then, record what you see on the portal or import a demand register you have
           downloaded; everything below works the same either way.

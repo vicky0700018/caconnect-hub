@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { useState } from "react";
 import { FINANCIAL_YEARS, QUARTERS, TDS_FORMS, formatINR } from "@/data/mockData";
 import { nextId, useStore } from "../store";
@@ -19,7 +21,7 @@ export default function TDSReturns() {
   const [client, setClient] = useState("");
   const [fy, setFy] = useState("FY2026-27");
   const [quarter, setQuarter] = useState("Q2 FY2026-27");
-  const [form, setForm] = useState("24Q — Salary");
+  const [form, setForm] = useState("24Q â€” Salary");
   const [error, setError] = useState("");
 
   const openReturn = () => {
@@ -68,7 +70,7 @@ export default function TDSReturns() {
             <Field label="Quarter" required>
               <Select value={quarter} onChange={setQuarter} options={QUARTERS} />
             </Field>
-            <Field label="Form" required helper="24Q — salary. 26Q — everything else.">
+            <Field label="Form" required helper="24Q â€” salary. 26Q â€” everything else.">
               <Select value={form} onChange={setForm} options={TDS_FORMS} />
             </Field>
             {error ? <p className="text-[12px] text-danger">{error}</p> : null}

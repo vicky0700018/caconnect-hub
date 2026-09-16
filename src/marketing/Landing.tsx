@@ -1,385 +1,1591 @@
-import { useState } from "react";
+"use client";
 
-const NAV_LINKS = [
-  { label: "Find a CA", href: "#find-a-ca" },
-  { label: "How it works", href: "#how-it-works" },
-  { label: "Pricing", href: "#pricing" },
-];
+import { useState, useEffect } from "react";
+import {
+  LayoutDashboard,
+  Users,
+  CalendarClock,
+  GitCompare,
+  Landmark,
+  ClipboardCheck,
+  Scale,
+  Receipt,
+  FileText,
+  Building2,
+  Percent,
+  Mail,
+  UsersRound,
+  Store,
+  ArrowRight,
+  ChevronRight,
+  Menu,
+  X,
+  Check,
+  Search,
+  MapPin,
+  Briefcase,
+  Star,
+  ShieldCheck,
+} from "lucide-react";
 
-const MODULES = [
-  ["Client register", "Every client, PAN, GSTIN and contact person in one searchable list."],
-  ["Compliance calendar", "Statutory due dates mapped to each client, month by month."],
-  ["Document collection & KYC", "Request, chase and store client documents without email threads."],
-  ["GST 2A/2B reconciliation", "Match purchase registers against portal data and flag mismatches."],
-  ["TDS return workflow", "Quarterly returns tracked from challan to filing acknowledgement."],
-  ["Audit workpapers & checklists", "Standard checklists, reviewer sign-off and workpaper trails."],
-  ["Notice tracker", "Every notice, hearing date and reply status in one register."],
-  ["Income Tax status", "Filing stage, refunds and assessment status per assessee."],
-  ["Fee register", "Bills raised, receipts, outstanding and write-offs by client."],
-  ["Advance Tax", "Instalment computation and reminders across all four quarters."],
-  ["Client Emails", "Drafted, sent and pending client correspondence, logged."],
-  ["Team", "Assign work, see load per member and track review status."],
-  ["Marketplace", "Find empanelment work and collaborate with other firms."],
-];
+type LandingProps = {
+  onLogin: () => void;
+  onStart: () => void;
+};
 
-const STEPS = [
-  ["01", "Add your clients", "Import a list or add clients one by one with PAN, GSTIN and contacts."],
-  ["02", "Track compliance, documents and fees", "Due dates, document requests and billing stay attached to the client."],
-  ["03", "Run the firm from one place", "One dashboard for the whole team, every morning."],
-];
-
-const FEATURES = [
-  ["Built for small firms", "Designed for practices of one to five people, not enterprise finance teams."],
-  ["Indian statutory calendar", "GST, TDS, Income Tax and audit dates already mapped."],
-  ["AI-assisted drafting", "Turn a notice into a first-draft reply in seconds, then edit."],
-  ["Nothing to install", "Runs in the browser. Set up in under five minutes."],
-  ["Client-wise view", "Open one client and see deadlines, documents, notices and fees together."],
-  ["Clear fee tracking", "Know what is billed, received and outstanding without a spreadsheet."],
-];
-
-const PLANS = [
-  { name: "Starter", price: "Free", note: "Up to 10 clients", features: ["Client register", "Compliance calendar", "Document requests", "Email support"] },
-  { name: "Solo", price: "₹999", per: "/mo", note: "For a single practitioner", features: ["Unlimited clients", "GST 2A/2B reconciliation", "Fee register", "Notice tracker"], highlight: true },
-  { name: "Pro", price: "₹1,999", per: "/mo", note: "For a growing practice", features: ["Everything in Solo", "TDS & audit workflows", "AI-assisted drafting", "Priority support"] },
-  { name: "Team", price: "₹2,999", per: "/mo", note: "For firms up to five people", features: ["Everything in Pro", "Team assignment & review", "Marketplace access", "Onboarding help"] },
-];
-
-function Logo() {
+/* ---------------- Logo Component ---------------- */
+function Logo({ className = "" }: { className?: string }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="grid h-7 w-7 place-items-center rounded-sm border border-brand/50 text-[11px] font-semibold text-brand">
-        CA
-      </span>
-      <span className="font-serif text-lg tracking-tight">CAConnect</span>
+    <div className={`flex items-center gap-2 ${className}`}>
+      <svg viewBox="0 0 32 32" className="size-6 shrink-0" aria-hidden="true">
+        <rect width="32" height="32" rx="7" className="fill-foreground"></rect>
+        <path
+          d="M10 7h8.5L23 11.5V25a1 1 0 0 1-1 1H10a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"
+          className="fill-background"
+        ></path>
+        <path d="M18.5 7 23 11.5h-4.5V7z" className="fill-muted-foreground"></path>
+        <path
+          d="m12.2 17.6 2.6 2.6 5-5.4"
+          fill="none"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="stroke-foreground"
+        ></path>
+      </svg>
+      <div className="flex min-w-0 flex-col leading-none">
+        <span className="font-semibold tracking-tight text-foreground text-[15px]">
+          CAConnect
+        </span>
+        <span className="mt-0.5 text-[0.625rem] font-medium tracking-wide text-muted-foreground">
+          by Bevritti
+        </span>
+      </div>
     </div>
   );
 }
 
-export default function Landing({ onLogin, onStart }: { onLogin: () => void; onStart: () => void }) {
-  const [menu, setMenu] = useState(false);
+/* ---------------- Hero Demo Tab Data ---------------- */
+const DEMO_WORKFLOWS = [
+  {
+    id: "dashboard",
+    name: "Dashboard",
+    icon: LayoutDashboard,
+    caption: "What you open at nine — whatever is already past its due date, first.",
+  },
+  {
+    id: "clients",
+    name: "Clients",
+    icon: Users,
+    caption: "One searchable register for every client, PAN, GSTIN and assigned partner.",
+  },
+  {
+    id: "compliance",
+    name: "Compliance",
+    icon: CalendarClock,
+    caption: "Statutory calendar pre-loaded with GST, TDS, ITR and ROC deadlines.",
+  },
+  {
+    id: "gst",
+    name: "GST",
+    icon: GitCompare,
+    caption: "Reconcile purchase registers against GSTR-2B JSON in seconds.",
+  },
+  {
+    id: "tds",
+    name: "TDS",
+    icon: Landmark,
+    caption: "Track 24Q & 26Q challans, deductees and section 206AA shortfall checks.",
+  },
+  {
+    id: "audit",
+    name: "Audit",
+    icon: ClipboardCheck,
+    caption: "Tax Audit u/s 44AB checklists, workpaper trails and reviewer sign-off.",
+  },
+  {
+    id: "notices",
+    name: "Notices",
+    icon: Scale,
+    caption: "AI-assisted notice reply drafting with section, DIN and facts preserved.",
+  },
+  {
+    id: "fees",
+    name: "Fees",
+    icon: Receipt,
+    caption: "Bills raised, receipts, outstanding and overdue balances client-wise.",
+  },
+];
+
+/* ---------------- Product Workflows Detailed Data ---------------- */
+const WORKFLOW_ITEMS = [
+  {
+    key: "dashboard",
+    title: "The morning view",
+    icon: LayoutDashboard,
+    lede: "Not a report you run. The four figures that decide your day, with whatever is already past its due date at the top.",
+    points: [
+      "Overdue first, then the next seven days, then what can wait — the order the day actually happens in.",
+      "Income Tax status per client per assessment year, with a feed of what changed since you last looked.",
+      "Advance tax: one estimate per client, checked against all four installment dates.",
+      "A demand raised this week reaches you here, before the client rings about it.",
+    ],
+  },
+  {
+    key: "clients",
+    title: "Client management",
+    icon: Users,
+    lede: "One record per client, and everything else in the product hangs off it.",
+    points: [
+      "A record per client: PAN, GSTIN, entity type, service tags, contact person.",
+      "KYC onboarding checklists generated by entity type, verified item by item.",
+      "A permanent read-only portal link so clients can check their own position.",
+      "Client emails drafted from your real deadlines, documents and fees — not a blank box.",
+    ],
+  },
+  {
+    key: "compliance",
+    title: "Compliance calendar",
+    icon: CalendarClock,
+    lede: "You never type a filing date. Tag a client with a service and their year fills itself in.",
+    points: [
+      "Indian statutory dates pre-loaded — ITR, GSTR-1, GSTR-3B, TDS quarterly, ROC.",
+      "Grouped by overdue, this week, and what can wait.",
+      "Email reminders go out before the due date, once per filing.",
+      "Status per client per period: pending, in progress, filed.",
+    ],
+  },
+  {
+    key: "gst",
+    title: "GST 2A/2B reconciliation",
+    icon: GitCompare,
+    lede: "The job that gets done in Excel the night before the return, done in seconds instead.",
+    points: [
+      "Upload the purchase register as CSV and the GSTR-2B as JSON.",
+      "Mismatches surface invoice by invoice — amount mismatches, in-purchases-only, in-2B-only.",
+      "A bulk resolve workflow, so nothing slips through before filing.",
+      "One run per client per month, kept, so you can show what you checked.",
+    ],
+  },
+  {
+    key: "tds",
+    title: "TDS returns",
+    icon: Landmark,
+    lede: "The challans and deductees behind every 24Q and 26Q, checked before you file rather than after.",
+    points: [
+      "Log challans and deductees for 24Q (salary) and 26Q (non-salary), quarter by quarter.",
+      "A missing or invalid PAN is flagged against section 206AA, with the exact rupee shortfall.",
+      "A challan that does not add up to what is claimed against it is flagged too.",
+      "Section 194C and its neighbours are checked on the financial-year aggregate, not just this quarter.",
+    ],
+  },
+  {
+    key: "audit",
+    title: "Audit workpapers",
+    icon: ClipboardCheck,
+    lede: "A digital audit file per client per year: the checklist, the evidence, and who signed it off.",
+    points: [
+      "Seeded checklists for Tax Audit u/s 44AB, Statutory Audit and GST Audit.",
+      "Evidence attached against each item, from the documents you already hold.",
+      "A reviewer sign-off layer and an append-only event log.",
+      "Form 3CD clauses the product genuinely holds, filled exactly — the rest left blank.",
+    ],
+  },
+  {
+    key: "notices",
+    title: "Notices & documents",
+    icon: Scale,
+    lede: "From the day the notice lands to the day the matter closes — and the paperwork it takes to get there.",
+    points: [
+      "Paste an IT notice or upload the PDF and get a draft reply to review and sign.",
+      "Track the matter through hearings, status changes and orders until it closes.",
+      "Document requests your client opens without an account or an app.",
+      "Everything filed against the client it belongs to.",
+    ],
+  },
+  {
+    key: "fees",
+    title: "Fees & the firm",
+    icon: Receipt,
+    lede: "What you are owed, and who in the firm is carrying what.",
+    points: [
+      "A fee register per client per service — collected, outstanding, overdue.",
+      "Invite staff, assign clients and filings, and see whose queue is full.",
+      "Assignment is a filter, not a wall: anyone can cover for anyone on leave.",
+      "An optional public listing if you want new work to find you.",
+    ],
+  },
+];
+
+/* ---------------- Pricing Plans ---------------- */
+const PRICING_PLANS = [
+  {
+    id: "starter",
+    badge: "",
+    name: "Starter",
+    price: "Free",
+    period: "",
+    clients: "10",
+    aiDrafts: "3 / month",
+    team: "Single login",
+    portals: "—",
+  },
+  {
+    id: "solo",
+    badge: "Most popular",
+    name: "Solo",
+    price: "₹999",
+    period: "/mo",
+    clients: "50",
+    aiDrafts: "20 / month",
+    team: "Single login",
+    portals: "—",
+  },
+  {
+    id: "pro",
+    badge: "",
+    name: "Pro",
+    price: "₹1,999",
+    period: "/mo",
+    clients: "150",
+    aiDrafts: "100 / month",
+    team: "3 people",
+    portals: "Included",
+  },
+  {
+    id: "team",
+    badge: "Growing firms",
+    badgeBrand: true,
+    name: "Team",
+    price: "₹2,999",
+    period: "/mo",
+    clients: "Unlimited",
+    aiDrafts: "Unlimited",
+    team: "Unlimited",
+    portals: "Included",
+  },
+];
+
+/* ---------------- Find a CA Sample Directory ---------------- */
+const CA_DIRECTORY = [
+  {
+    name: "Rautela & Associates",
+    city: "Pune",
+    specialization: "Income Tax & Statutory Audit",
+    partners: 3,
+    experience: "14 years",
+  },
+  {
+    name: "V. Sharma & Co.",
+    city: "Mumbai",
+    specialization: "GST Reconciliation & Corporate Tax",
+    partners: 4,
+    experience: "18 years",
+  },
+  {
+    name: "Sthambh Alliance LLP",
+    city: "Bengaluru",
+    specialization: "Startups, TDS & ROC Compliance",
+    partners: 2,
+    experience: "9 years",
+  },
+  {
+    name: "Khandelwal & Gupta",
+    city: "Delhi NCR",
+    specialization: "Litigation, Appeals & IT Notices",
+    partners: 5,
+    experience: "22 years",
+  },
+  {
+    name: "Patel & Mehta CAs",
+    city: "Ahmedabad",
+    specialization: "Tax Audits & Transfer Pricing",
+    partners: 3,
+    experience: "12 years",
+  },
+];
+
+export default function Landing({ onLogin, onStart }: LandingProps) {
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const [activeHeroTab, setActiveHeroTab] = useState("dashboard");
+  const [activeWorkflow, setActiveWorkflow] = useState("dashboard");
+  const [showFindCaModal, setShowFindCaModal] = useState(false);
+  const [searchCity, setSearchCity] = useState("");
+
+  // Typing animation for drafting section
+  const [draftStep, setDraftStep] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDraftStep((s) => (s >= 3 ? 0 : s + 1));
+    }, 2800);
+    return () => clearInterval(timer);
+  }, []);
+
+  const filteredCAs = searchCity
+    ? CA_DIRECTORY.filter(
+        (ca) =>
+          ca.city.toLowerCase().includes(searchCity.toLowerCase()) ||
+          ca.name.toLowerCase().includes(searchCity.toLowerCase()) ||
+          ca.specialization.toLowerCase().includes(searchCity.toLowerCase()),
+      )
+    : CA_DIRECTORY;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-          <Logo />
-          <nav className="hidden items-center gap-7 md:flex">
-            {NAV_LINKS.map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {l.label}
-              </a>
-            ))}
+    <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-brand selection:text-brand-foreground">
+      {/* ---------------- Header ---------------- */}
+      <header className="sticky top-0 z-30 border-b border-rule/70 bg-background/80 backdrop-blur-md">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
+          <a
+            href="/"
+            aria-label="CAConnect home"
+            className="shrink-0 transition-opacity hover:opacity-90"
+          >
+            <Logo />
+          </a>
+
+          <nav className="hidden items-center gap-1 sm:flex">
+            <button
+              onClick={() => setShowFindCaModal(true)}
+              className="inline-flex h-7 items-center justify-center gap-1 rounded-md px-2.5 text-[0.8rem] font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            >
+              Find a CA
+            </button>
+            <a
+              href="#workflows"
+              className="inline-flex h-7 items-center justify-center gap-1 rounded-md px-2.5 text-[0.8rem] font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            >
+              Features
+            </a>
+            <a
+              href="#how-it-works"
+              className="inline-flex h-7 items-center justify-center gap-1 rounded-md px-2.5 text-[0.8rem] font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            >
+              How it works
+            </a>
+            <a
+              href="#pricing"
+              className="inline-flex h-7 items-center justify-center gap-1 rounded-md px-2.5 text-[0.8rem] font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            >
+              Pricing
+            </a>
+
+            <span className="mx-2 h-4 w-px bg-rule" aria-hidden="true" />
+
             <button
               onClick={onLogin}
-              className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex h-7 items-center justify-center gap-1 rounded-md px-2.5 text-[0.8rem] font-medium text-foreground transition-colors hover:bg-muted/50"
             >
               Log in
             </button>
-            <button onClick={onStart} className="btn-brand">
+            <button
+              onClick={onStart}
+              className="inline-flex h-7 items-center justify-center gap-1 rounded-md bg-primary px-3 text-[0.8rem] font-medium text-primary-foreground transition-all hover:bg-primary/90"
+            >
               Start free
             </button>
           </nav>
-          <button
-            onClick={() => setMenu((m) => !m)}
-            aria-label="Open menu"
-            className="rounded border border-border px-2 py-1 text-sm md:hidden"
-          >
-            ☰
-          </button>
+
+          <div className="flex items-center gap-2 sm:hidden">
+            <button
+              onClick={onStart}
+              className="inline-flex h-7 items-center justify-center rounded-md bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground"
+            >
+              Start free
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileMenu((m) => !m)}
+              className="flex size-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+              aria-label="Toggle menu"
+            >
+              {mobileMenu ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
+          </div>
         </div>
-        {menu ? (
-          <div className="border-t border-border px-5 py-3 md:hidden">
-            <div className="flex flex-col gap-3">
-              {NAV_LINKS.map((l) => (
-                <a
-                  key={l.label}
-                  href={l.href}
-                  onClick={() => setMenu(false)}
-                  className="text-sm text-muted-foreground"
-                >
-                  {l.label}
-                </a>
-              ))}
-              <button onClick={onLogin} className="text-left text-sm text-muted-foreground">
+
+        {/* Mobile Dropdown */}
+        {mobileMenu ? (
+          <div className="border-t border-rule bg-card/95 px-6 py-4 sm:hidden">
+            <div className="flex flex-col gap-3 text-sm">
+              <button
+                onClick={() => {
+                  setMobileMenu(false);
+                  setShowFindCaModal(true);
+                }}
+                className="text-left text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Find a CA
+              </button>
+              <a
+                href="#workflows"
+                onClick={() => setMobileMenu(false)}
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Features
+              </a>
+              <a
+                href="#how-it-works"
+                onClick={() => setMobileMenu(false)}
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                How it works
+              </a>
+              <a
+                href="#pricing"
+                onClick={() => setMobileMenu(false)}
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Pricing
+              </a>
+              <div className="my-1 border-t border-rule" />
+              <button
+                onClick={() => {
+                  setMobileMenu(false);
+                  onLogin();
+                }}
+                className="text-left font-medium text-foreground"
+              >
                 Log in
               </button>
-              <button onClick={onStart} className="btn-brand w-full">
-                Start free
+              <button
+                onClick={() => {
+                  setMobileMenu(false);
+                  onStart();
+                }}
+                className="btn-brand w-full py-2 text-center"
+              >
+                Start free — no credit card
               </button>
             </div>
           </div>
         ) : null}
       </header>
 
-      {/* Hero */}
-      <section className="mx-auto max-w-6xl px-5 pb-16 pt-16 sm:px-8 sm:pt-24">
-        <p className="text-[11px] tracking-[0.18em] text-brand">
-          PRACTICE MANAGEMENT FOR INDIAN CA FIRMS
-        </p>
-        <h1 className="mt-5 max-w-3xl font-serif text-4xl leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-          Run your CA firm
-          <br />
-          without the chaos
-        </h1>
-        <p className="mt-6 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
-          Client deadlines, document collection, GST reconciliation, fee tracking and AI-drafted IT
-          notice replies — in one place, built for firms of one to five people.
-        </p>
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <button onClick={onStart} className="btn-brand">
-            Start free — no credit card
-          </button>
-          <a href="#how-it-works" className="btn-ghost-line">
-            See how it works
-          </a>
-        </div>
-        <p className="mt-4 text-[12px] text-muted-foreground">
-          Free for up to 10 clients · Set up in under 5 minutes
-        </p>
-      </section>
-
-      {/* Drafting */}
-      <section className="border-t border-border bg-surface/40 py-16 sm:py-20">
-        <div className="mx-auto grid max-w-6xl gap-10 px-5 sm:px-8 lg:grid-cols-2 lg:items-center">
-          <div>
-            <p className="text-[11px] tracking-[0.18em] text-brand">AI-ASSISTED DRAFTING</p>
-            <h2 className="mt-4 font-serif text-3xl tracking-tight sm:text-4xl">
-              An hour of drafting, in half a minute
-            </h2>
-            <p className="mt-5 text-[15px] leading-relaxed text-muted-foreground">
-              Paste the notice, pick the client, and get a structured first draft with the facts,
-              the relevant section and the documents to attach. You review and edit — it never
-              files anything on its own.
+      <main className="flex-1">
+        {/* ---------------- Hero Section ---------------- */}
+        <section className="mx-auto w-full max-w-6xl px-6 pt-14 pb-16 sm:pt-20">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-brand text-xs font-semibold tracking-[0.14em] uppercase">
+              CAConnect by Bevritti
             </p>
-            <ul className="mt-6 space-y-2 text-[13px] text-muted-foreground">
-              <li>· Section-wise reply structure</li>
-              <li>· Suggested annexure list</li>
-              <li>· Editable before anything leaves the firm</li>
-            </ul>
-          </div>
-          <div className="card-surface overflow-hidden">
-            <div className="flex items-center gap-2 border-b border-border px-4 py-2.5 text-[12px] text-muted-foreground">
-              <span className="h-2 w-2 rounded-full bg-brand/70" />
-              Notice reply · draft
+            <h1 className="mt-5 font-sans text-[2.5rem] leading-[1.04] font-semibold tracking-[-0.032em] text-balance sm:text-[3.5rem]">
+              Practice management for modern CA firms.
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-muted-foreground sm:text-xl">
+              Clients, compliance deadlines, documents, GST reconciliation, TDS, audits, notices
+              and fees — in one place, built for Indian firms of one to five people.
+            </p>
+
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <button
+                onClick={onStart}
+                className="cta-lift inline-flex h-12 items-center justify-center rounded-lg bg-primary px-7 text-base font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                Start free — no credit card
+              </button>
+              <a
+                href="#workflows"
+                className="inline-flex h-12 items-center justify-center rounded-lg border border-border bg-background px-7 text-base font-medium text-foreground transition-colors hover:bg-muted/50"
+              >
+                See the product
+              </a>
             </div>
-            <div className="space-y-4 p-4">
-              <div className="rounded border border-border bg-surface-2 p-3">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                  Notice received
-                </p>
-                <p className="mt-2 text-[13px] leading-relaxed">
-                  Notice u/s 143(1)(a) — mismatch between reported income and Form 26AS for
-                  AY 2025-26. Client: Sample Traders LLP. Response due in 12 days.
-                </p>
+
+            <p className="mt-5 text-sm text-muted-foreground">
+              Free for up to 10 clients · Set up in under 5 minutes · No card
+            </p>
+          </div>
+
+          {/* ---------------- Interactive Hero Product Demo Frame ---------------- */}
+          <div className="mt-14">
+            <div className="product-frame bg-card">
+              {/* Frame Header */}
+              <div className="flex items-center gap-3 border-b border-rule px-4 py-2.5">
+                <svg viewBox="0 0 32 32" className="size-4 shrink-0" aria-hidden="true">
+                  <rect width="32" height="32" rx="7" className="fill-foreground" />
+                  <path
+                    d="M10 7h8.5L23 11.5V25a1 1 0 0 1-1 1H10a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"
+                    className="fill-background"
+                  />
+                  <path d="M18.5 7 23 11.5h-4.5V7z" className="fill-muted-foreground" />
+                  <path
+                    d="m12.2 17.6 2.6 2.6 5-5.4"
+                    fill="none"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="stroke-foreground"
+                  />
+                </svg>
+                <span className="text-[12px] font-medium text-foreground">CAConnect</span>
+                <span className="hidden text-[11px] text-muted-foreground sm:inline">
+                  Rautela & Associates · Pune
+                </span>
+                <span className="ml-auto hidden text-[11px] text-muted-foreground sm:inline">
+                  Sample data
+                </span>
               </div>
-              <div className="rounded border border-brand/30 bg-surface-2 p-3">
-                <p className="text-[11px] uppercase tracking-wider text-brand">Draft reply</p>
-                <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-                  With reference to the intimation dated 12 June, we submit that the difference
-                  arises from professional receipts already offered to tax under the head Business
-                  Income. A reconciliation statement and ledger extract are annexed…
+
+              {/* Tab Navigation */}
+              <div
+                role="tablist"
+                className="scrollbar-none relative flex gap-1 overflow-x-auto border-b border-rule px-2 py-1.5"
+              >
+                {DEMO_WORKFLOWS.map((wf) => {
+                  const Icon = wf.icon;
+                  const active = activeHeroTab === wf.id;
+                  return (
+                    <button
+                      key={wf.id}
+                      role="tab"
+                      onClick={() => setActiveHeroTab(wf.id)}
+                      className={`relative z-10 flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
+                        active
+                          ? "bg-muted/60 text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Icon
+                        className={`size-3.5 transition-colors ${active ? "text-brand" : ""}`}
+                      />
+                      {wf.name}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Tab Screen Panel */}
+              <div className="relative min-h-[20rem] overflow-hidden bg-background/50 p-4 sm:p-5">
+                {activeHeroTab === "dashboard" && (
+                  <div className="marketing-enter space-y-4">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 border-b border-rule/60 pb-2.5">
+                      <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                        Morning Dashboard
+                      </p>
+                      <p className="tabular text-[11px] text-muted-foreground">
+                        Tuesday, 15 September 2026
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 divide-x divide-y divide-rule/60 rounded-md border border-rule/60 bg-card/40 sm:grid-cols-4 sm:divide-y-0">
+                      <div className="p-3">
+                        <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
+                          Overdue filings
+                        </p>
+                        <p className="tabular mt-1 text-xl font-semibold text-danger">12</p>
+                      </div>
+                      <div className="p-3">
+                        <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
+                          Due in 7 days
+                        </p>
+                        <p className="tabular mt-1 text-xl font-semibold text-foreground">14</p>
+                      </div>
+                      <div className="p-3">
+                        <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
+                          Active Clients
+                        </p>
+                        <p className="tabular mt-1 text-xl font-semibold text-foreground">22</p>
+                      </div>
+                      <div className="p-3">
+                        <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
+                          Fees overdue
+                        </p>
+                        <p className="tabular mt-1 text-xl font-semibold text-danger">₹12,000</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-[11px] font-medium text-muted-foreground uppercase">
+                        Immediate attention
+                      </p>
+                      {[
+                        {
+                          client: "Sample Traders LLP",
+                          task: "GSTR-3B · August 2026",
+                          status: "2 days overdue",
+                          danger: true,
+                        },
+                        {
+                          client: "Demo Industries Pvt Ltd",
+                          task: "TDS 24Q · Q2 Challan check",
+                          status: "Due in 3 days",
+                          danger: false,
+                        },
+                        {
+                          client: "Apex Foods Private Limited",
+                          task: "Tax Audit u/s 44AB Workpapers",
+                          status: "In partner review",
+                          danger: false,
+                        },
+                      ].map((row) => (
+                        <div
+                          key={row.client}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded border border-rule bg-card/50 px-3.5 py-2 text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-foreground">{row.client}</span>
+                            <span className="text-muted-foreground">· {row.task}</span>
+                          </div>
+                          <span
+                            className={
+                              row.danger
+                                ? "rounded bg-danger/10 px-2 py-0.5 text-[11px] font-medium text-danger"
+                                : "rounded bg-muted/60 px-2 py-0.5 text-[11px] text-muted-foreground"
+                            }
+                          >
+                            {row.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeHeroTab === "clients" && (
+                  <div className="marketing-enter space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                        Client Master Register
+                      </p>
+                      <span className="text-xs text-muted-foreground">22 total clients</span>
+                    </div>
+                    <div className="overflow-x-auto rounded border border-rule">
+                      <table className="w-full text-left text-xs">
+                        <thead className="border-b border-rule bg-card/60 text-muted-foreground">
+                          <tr>
+                            <th className="p-2.5 font-medium">Client Name</th>
+                            <th className="p-2.5 font-medium">Type</th>
+                            <th className="p-2.5 font-medium">PAN</th>
+                            <th className="p-2.5 font-medium">GSTIN</th>
+                            <th className="p-2.5 font-medium">KYC</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-rule/60">
+                          <tr>
+                            <td className="p-2.5 font-medium text-foreground">Sample Traders LLP</td>
+                            <td className="p-2.5 text-muted-foreground">LLP</td>
+                            <td className="p-2.5 font-mono text-[11px]">AAAFS1234K</td>
+                            <td className="p-2.5 font-mono text-[11px]">27AAAFS1234K1Z5</td>
+                            <td className="p-2.5 text-success">Verified</td>
+                          </tr>
+                          <tr>
+                            <td className="p-2.5 font-medium text-foreground">
+                              Demo Industries Pvt Ltd
+                            </td>
+                            <td className="p-2.5 text-muted-foreground">Company</td>
+                            <td className="p-2.5 font-mono text-[11px]">AACCD5678M</td>
+                            <td className="p-2.5 font-mono text-[11px]">27AACCD5678M1Z8</td>
+                            <td className="p-2.5 text-success">Verified</td>
+                          </tr>
+                          <tr>
+                            <td className="p-2.5 font-medium text-foreground">
+                              Kulkarni & Sons Jewellers
+                            </td>
+                            <td className="p-2.5 text-muted-foreground">Firm</td>
+                            <td className="p-2.5 font-mono text-[11px]">AABFK9876P</td>
+                            <td className="p-2.5 font-mono text-[11px]">27AABFK9876P1Z2</td>
+                            <td className="p-2.5 text-warn">Pending Aadhar</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {activeHeroTab === "compliance" && (
+                  <div className="marketing-enter space-y-3">
+                    <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      Statutory Compliance Calendar
+                    </p>
+                    <div className="grid gap-2 text-xs sm:grid-cols-2">
+                      <div className="rounded border border-rule bg-card/40 p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-foreground">GSTR-3B (Monthly)</span>
+                          <span className="rounded bg-danger/10 px-1.5 py-0.5 text-[10px] text-danger">
+                            Overdue
+                          </span>
+                        </div>
+                        <p className="mt-1 text-muted-foreground">Due: 20 Aug 2026 · 14 Clients</p>
+                      </div>
+                      <div className="rounded border border-rule bg-card/40 p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-foreground">TDS Form 26Q (Q2)</span>
+                          <span className="rounded bg-warn/10 px-1.5 py-0.5 text-[10px] text-warn">
+                            In Progress
+                          </span>
+                        </div>
+                        <p className="mt-1 text-muted-foreground">Due: 31 Oct 2026 · 8 Clients</p>
+                      </div>
+                      <div className="rounded border border-rule bg-card/40 p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-foreground">Tax Audit u/s 44AB</span>
+                          <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                            Drafting
+                          </span>
+                        </div>
+                        <p className="mt-1 text-muted-foreground">Due: 30 Sep 2026 · 6 Assessees</p>
+                      </div>
+                      <div className="rounded border border-rule bg-card/40 p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-foreground">Advance Tax Q2 (45%)</span>
+                          <span className="rounded bg-success/10 px-1.5 py-0.5 text-[10px] text-success">
+                            Calculated
+                          </span>
+                        </div>
+                        <p className="mt-1 text-muted-foreground">Due: 15 Sep 2026 · 18 Assessees</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeHeroTab === "gst" && (
+                  <div className="marketing-enter space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                        GST 2A / 2B Match Run · Sample Traders LLP
+                      </p>
+                      <span className="rounded bg-success/10 px-2 py-0.5 text-[11px] text-success">
+                        Match 94.2%
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="rounded border border-rule bg-card/40 p-2.5">
+                        <p className="text-[10px] text-muted-foreground uppercase">Purchases ITC</p>
+                        <p className="mt-1 font-semibold text-foreground">₹4,82,400</p>
+                      </div>
+                      <div className="rounded border border-rule bg-card/40 p-2.5">
+                        <p className="text-[10px] text-muted-foreground uppercase">GSTR-2B Available</p>
+                        <p className="mt-1 font-semibold text-foreground">₹4,39,900</p>
+                      </div>
+                      <div className="rounded border border-danger/30 bg-danger/5 p-2.5">
+                        <p className="text-[10px] text-danger uppercase">Mismatch ITC</p>
+                        <p className="mt-1 font-semibold text-danger">₹42,500 (6 Invoices)</p>
+                      </div>
+                    </div>
+                    <div className="rounded border border-rule bg-surface/30 p-2.5 text-xs text-muted-foreground">
+                      ⚠️ 3 invoices missing in vendor's GSTR-1 · 2 invoices have taxable value discrepancy.
+                    </div>
+                  </div>
+                )}
+
+                {activeHeroTab === "tds" && (
+                  <div className="marketing-enter space-y-3">
+                    <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      TDS Quarterly Ledger · 24Q & 26Q
+                    </p>
+                    <div className="space-y-2 text-xs">
+                      <div className="flex items-center justify-between rounded border border-rule bg-card/40 p-2.5">
+                        <div>
+                          <p className="font-medium text-foreground">Section 194C · Contractors</p>
+                          <p className="text-[11px] text-muted-foreground">12 Deductees · ₹3,40,000 paid</p>
+                        </div>
+                        <span className="rounded bg-success/10 px-2 py-0.5 text-[11px] text-success">
+                          Challan Matched
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between rounded border border-rule bg-card/40 p-2.5">
+                        <div>
+                          <p className="font-medium text-foreground">Section 194J · Professional Fees</p>
+                          <p className="text-[11px] text-muted-foreground">4 Deductees · 1 PAN unverified</p>
+                        </div>
+                        <span className="rounded bg-warn/10 px-2 py-0.5 text-[11px] text-warn">
+                          206AA Check Required
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeHeroTab === "audit" && (
+                  <div className="marketing-enter space-y-3">
+                    <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      Tax Audit 44AB · Workpaper Trail
+                    </p>
+                    <div className="space-y-2 text-xs">
+                      {[
+                        { clause: "Clause 16: Amounts not credited to P&L", status: "Verified", by: "Partner Sign-off" },
+                        { clause: "Clause 21(a): Disallowance u/s 40(a)", status: "Evidence Attached", by: "Senior Articled" },
+                        { clause: "Clause 34: TDS Compliance Audit", status: "Workpaper in review", by: "Reviewer" },
+                      ].map((c) => (
+                        <div
+                          key={c.clause}
+                          className="flex items-center justify-between rounded border border-rule bg-card/40 p-2.5"
+                        >
+                          <span className="font-medium text-foreground">{c.clause}</span>
+                          <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                            {c.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeHeroTab === "notices" && (
+                  <div className="marketing-enter space-y-3">
+                    <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      Income Tax Notice Tracker
+                    </p>
+                    <div className="rounded border border-rule bg-card/40 p-3 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-brand">Notice u/s 143(2) Scrutiny</span>
+                        <span className="text-[11px] text-muted-foreground">Hearing: 24 Sept 2026</span>
+                      </div>
+                      <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                        DIN: ITBA/AST/S/143(2)/2026-27/10982…
+                      </p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="rounded bg-brand/10 px-2 py-0.5 text-[11px] font-medium text-brand">
+                          AI Draft Ready
+                        </span>
+                        <span className="text-muted-foreground">Annexure ledger extracted</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeHeroTab === "fees" && (
+                  <div className="marketing-enter space-y-3">
+                    <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      Firm Fee Register (Current FY)
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="rounded border border-rule bg-card/40 p-2.5">
+                        <p className="text-[10px] text-muted-foreground uppercase">Total Billed</p>
+                        <p className="mt-1 font-semibold text-foreground">₹4,86,000</p>
+                      </div>
+                      <div className="rounded border border-rule bg-card/40 p-2.5">
+                        <p className="text-[10px] text-muted-foreground uppercase">Received</p>
+                        <p className="mt-1 font-semibold text-success">₹3,74,000</p>
+                      </div>
+                      <div className="rounded border border-danger/30 bg-danger/5 p-2.5">
+                        <p className="text-[10px] text-danger uppercase">Outstanding</p>
+                        <p className="mt-1 font-semibold text-danger">₹1,12,000</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Frame Footer */}
+              <div className="flex items-center gap-3 border-t border-rule px-4 py-2.5">
+                <p className="flex-1 text-[11px] leading-relaxed text-muted-foreground">
+                  {DEMO_WORKFLOWS.find((w) => w.id === activeHeroTab)?.caption}
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                  <span className="rounded border border-border px-2 py-0.5">Reconciliation.pdf</span>
-                  <span className="rounded border border-border px-2 py-0.5">Ledger-extract.pdf</span>
+                <div className="hidden items-center gap-1 sm:flex" aria-hidden="true">
+                  {DEMO_WORKFLOWS.map((wf) => (
+                    <span
+                      key={wf.id}
+                      className={`h-1 rounded-full transition-all duration-300 ${
+                        activeHeroTab === wf.id ? "w-4 bg-primary" : "w-1 bg-rule"
+                      }`}
+                    />
+                  ))}
                 </div>
               </div>
-              <p className="text-[11px] text-muted-foreground">
-                Demo text only. No client information is used.
-              </p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Dashboard preview */}
-      <section className="border-t border-border py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <h2 className="font-serif text-3xl tracking-tight sm:text-4xl">
-            What you open at nine in the morning
-          </h2>
-          <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
-            Today's deadlines, documents still pending with clients, notices with a hearing date and
-            fees outstanding — before the first phone call of the day.
-          </p>
-          <div className="card-surface mt-9 overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-              <Logo />
-              <span className="text-[12px] text-muted-foreground">Dashboard preview</span>
+        {/* ---------------- Value Proposition Banner ---------------- */}
+        <section className="border-y border-rule bg-card/30">
+          <div className="mx-auto w-full max-w-6xl px-6 py-10">
+            <div className="grid gap-x-6 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  Built for
+                </p>
+                <p className="mt-2 text-pretty text-foreground">
+                  Solo CAs and firms of one to five
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  Sized for
+                </p>
+                <p className="mt-2 text-pretty text-foreground">20 to 150 clients per firm</p>
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  Covers
+                </p>
+                <p className="mt-2 text-pretty text-foreground">ITR · GST · TDS · ROC · Audit</p>
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  Runs on
+                </p>
+                <p className="mt-2 text-pretty text-foreground">A browser. Nothing to install.</p>
+              </div>
             </div>
-            <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
+          </div>
+        </section>
+
+        {/* ---------------- The Problem Section ---------------- */}
+        <section className="py-20 sm:py-24">
+          <div className="mx-auto w-full max-w-6xl px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-brand text-xs font-semibold tracking-[0.14em] uppercase">
+                The problem
+              </p>
+              <h2 className="mt-4 font-sans text-[1.75rem] leading-[1.15] font-semibold tracking-[-0.02em] text-balance sm:text-[2.125rem]">
+                Most small practices run on four tools, none of which talk
+              </h2>
+              <p className="mt-4 text-[1.0625rem] leading-relaxed text-pretty text-muted-foreground">
+                Tally for the books, WhatsApp for the client, Excel for the deadlines, and memory
+                for everything else. It works until a due date lands on the wrong week.
+              </p>
+            </div>
+
+            <div className="mx-auto mt-12 max-w-4xl border-t border-rule">
               {[
-                ["Due this week", "14", "GST, TDS and IT filings"],
-                ["Documents pending", "23", "With clients for over 5 days"],
-                ["Open notices", "6", "2 with hearing dates"],
-                ["Fees outstanding", "₹4.860L", "Across 18 clients"],
-              ].map(([label, value, sub]) => (
-                <div key={label} className="rounded border border-border bg-surface-2 p-4">
-                  <p className="text-[12px] text-muted-foreground">{label}</p>
-                  <p className="mt-2 font-serif text-2xl">{value}</p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">{sub}</p>
+                {
+                  problem: "Filing dates live in a spreadsheet, a diary and somebody’s memory.",
+                  solution:
+                    "Tag a client with GST and every GSTR-1 and GSTR-3B for the year is already dated.",
+                },
+                {
+                  problem:
+                    "Documents arrive across four WhatsApp threads and nobody can say what is missing.",
+                  solution:
+                    "One checklist per client, one link they open on their phone, ticked off as it lands.",
+                },
+                {
+                  problem: "The 2B is reconciled in Excel the night before the return.",
+                  solution:
+                    "Upload the register and the 2B; the mismatches are listed invoice by invoice.",
+                },
+                {
+                  problem:
+                    "A notice reply is an hour of typing from a template you wrote in 2019.",
+                  solution:
+                    "Paste the notice, get a draft carrying the DIN, section and year, in 30 seconds.",
+                },
+                {
+                  problem:
+                    "What is collected, what is outstanding, what is overdue — nobody knows today.",
+                  solution: "Three figures on the fee register, current as of this morning.",
+                },
+              ].map((row, i) => (
+                <div key={i} className="grid gap-2 border-b border-rule py-5 sm:grid-cols-2 sm:gap-8">
+                  <p className="text-muted-foreground">{row.problem}</p>
+                  <p className="flex gap-3 text-pretty text-foreground">
+                    <ArrowRight className="text-brand mt-1 size-4 shrink-0" aria-hidden="true" />
+                    <span>{row.solution}</span>
+                  </p>
                 </div>
               ))}
             </div>
-            <div className="border-t border-border p-4">
-              <div className="space-y-2">
+          </div>
+        </section>
+
+        {/* ---------------- "Not a mock-up" Live Screen Section ---------------- */}
+        <section className="border-t border-rule bg-card/30 py-20 sm:py-24">
+          <div className="mx-auto w-full max-w-6xl px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-brand text-xs font-semibold tracking-[0.14em] uppercase">
+                Not a mock-up
+              </p>
+              <h2 className="mt-4 font-sans text-[1.75rem] leading-[1.15] font-semibold tracking-[-0.02em] text-balance sm:text-[2.125rem]">
+                This is a live account, photographed
+              </h2>
+              <p className="mt-4 text-[1.0625rem] leading-relaxed text-pretty text-muted-foreground">
+                Everything else on this page is the product running in your browser. This is a live
+                view of a practice dashboard, unretouched, so you can check the experience yourself.
+              </p>
+            </div>
+
+            <div className="mt-12">
+              <div className="product-frame bg-background p-4 sm:p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-rule pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full bg-danger" />
+                      <span className="font-semibold text-foreground text-sm">
+                        Firm Practice Overview · Rautela & Associates
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Live Portal Sync</span>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-4">
+                    <div className="rounded border border-rule bg-card p-3">
+                      <p className="text-[11px] text-muted-foreground uppercase">Overdue Filings</p>
+                      <p className="mt-1 text-2xl font-bold text-danger">12</p>
+                      <p className="text-[11px] text-muted-foreground">Immediate action required</p>
+                    </div>
+                    <div className="rounded border border-rule bg-card p-3">
+                      <p className="text-[11px] text-muted-foreground uppercase">Due in 7 days</p>
+                      <p className="mt-1 text-2xl font-bold text-foreground">14</p>
+                      <p className="text-[11px] text-muted-foreground">GSTR-3B & Advance Tax</p>
+                    </div>
+                    <div className="rounded border border-rule bg-card p-3">
+                      <p className="text-[11px] text-muted-foreground uppercase">Clients Active</p>
+                      <p className="mt-1 text-2xl font-bold text-foreground">22</p>
+                      <p className="text-[11px] text-muted-foreground">All compliance mapped</p>
+                    </div>
+                    <div className="rounded border border-rule bg-card p-3">
+                      <p className="text-[11px] text-muted-foreground uppercase">Fees Outstanding</p>
+                      <p className="mt-1 text-2xl font-bold text-danger">₹12,000</p>
+                      <p className="text-[11px] text-muted-foreground">3 clients overdue &gt;30d</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded border border-rule bg-card/60 p-3">
+                    <p className="mb-2 text-xs font-medium text-foreground">Overdue filings queue</p>
+                    <div className="space-y-1.5 text-xs text-muted-foreground">
+                      <div className="flex justify-between rounded bg-surface/50 p-2">
+                        <span>GSTR-3B · Sample Traders LLP</span>
+                        <span className="text-danger font-medium">Due 20 Aug 2026 (Past due)</span>
+                      </div>
+                      <div className="flex justify-between rounded bg-surface/50 p-2">
+                        <span>TDS 24Q · Demo Industries Pvt Ltd</span>
+                        <span className="text-danger font-medium">Due 31 Jul 2026 (Past due)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-4 text-center text-xs text-muted-foreground">
+                Overdue filings first, because that is the order the day happens in.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------- The Product Workflows Section ---------------- */}
+        <section id="workflows" className="scroll-mt-16 border-t border-rule py-20 sm:py-24">
+          <div className="mx-auto w-full max-w-6xl px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-brand text-xs font-semibold tracking-[0.14em] uppercase">
+                The product
+              </p>
+              <h2 className="mt-4 font-sans text-[1.75rem] leading-[1.15] font-semibold tracking-[-0.02em] text-balance sm:text-[2.125rem]">
+                Eight workflows, and the screen each one runs on
+              </h2>
+              <p className="mt-4 text-[1.0625rem] leading-relaxed text-pretty text-muted-foreground">
+                Pick one and the screen beside it is the part of CAConnect that does the job — the
+                same columns, the same status words, the same checks. Everything named here exists
+                today.
+              </p>
+            </div>
+
+            <div className="mt-12">
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-12">
+                {/* Workflow Left Tabs */}
+                <div
+                  role="tablist"
+                  aria-orientation="vertical"
+                  className="scrollbar-none -mx-6 flex min-w-0 gap-2 overflow-x-auto px-6 lg:mx-0 lg:block lg:overflow-visible lg:px-0"
+                >
+                  {WORKFLOW_ITEMS.map((item) => {
+                    const Icon = item.icon;
+                    const active = activeWorkflow === item.key;
+                    return (
+                      <button
+                        key={item.key}
+                        role="tab"
+                        onClick={() => setActiveWorkflow(item.key)}
+                        className={`group shrink-0 text-left transition-colors duration-150 lg:w-full rounded-lg border border-rule px-3 py-2 lg:rounded-none lg:border-0 lg:border-t lg:px-0 lg:py-4 lg:border-l-2 lg:first:border-t-0 ${
+                          active
+                            ? "bg-card text-foreground lg:border-l-brand lg:bg-card/30"
+                            : "text-muted-foreground hover:text-foreground lg:border-l-transparent lg:hover:bg-card/40"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 lg:px-3">
+                          <Icon
+                            className={`size-4 shrink-0 transition-colors ${
+                              active ? "text-brand" : "text-muted-foreground"
+                            }`}
+                          />
+                          <span className="font-sans text-sm font-semibold whitespace-nowrap lg:text-base">
+                            {item.title}
+                          </span>
+                          <ChevronRight
+                            className={`ml-auto hidden size-4 shrink-0 transition-transform duration-200 lg:block ${
+                              active ? "text-brand rotate-90" : "text-muted-foreground/50"
+                            }`}
+                          />
+                        </div>
+
+                        {/* Desktop Description Preview */}
+                        <div className={`mt-3 hidden lg:block lg:px-3 lg:pl-[1.65rem] ${active ? "" : "hidden"}`}>
+                          <p className="text-pretty text-sm leading-relaxed text-muted-foreground">
+                            {item.lede}
+                          </p>
+                          <ul className="mt-3 space-y-2">
+                            {item.points.map((pt, idx) => (
+                              <li
+                                key={idx}
+                                className="flex gap-2.5 text-pretty text-sm leading-relaxed text-muted-foreground"
+                              >
+                                <span className="bg-brand/60 mt-[0.6em] size-1 shrink-0 rounded-full" />
+                                <span>{pt}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Workflow Right Interactive Preview Screen */}
+                <div className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+                  <div className="product-frame bg-card">
+                    <div className="relative min-h-[20rem] overflow-hidden p-4 sm:p-5">
+                      <div className="marketing-enter">
+                        <div className="flex items-center justify-between border-b border-rule pb-2.5">
+                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            {WORKFLOW_ITEMS.find((w) => w.key === activeWorkflow)?.title} Screen
+                          </span>
+                          <span className="text-[11px] text-muted-foreground">Interactive Module</span>
+                        </div>
+
+                        <div className="mt-4 space-y-3">
+                          <div className="rounded border border-rule bg-background/60 p-3.5 text-xs">
+                            <p className="font-medium text-foreground">
+                              {WORKFLOW_ITEMS.find((w) => w.key === activeWorkflow)?.lede}
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            {WORKFLOW_ITEMS.find((w) => w.key === activeWorkflow)?.points.map(
+                              (pt, i) => (
+                                <div
+                                  key={i}
+                                  className="flex items-start gap-2.5 rounded border border-rule/70 bg-card/60 p-2.5 text-xs text-muted-foreground"
+                                >
+                                  <Check className="size-4 shrink-0 text-brand mt-0.5" />
+                                  <span className="leading-relaxed">{pt}</span>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="border-t border-rule px-4 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
+                      {WORKFLOW_ITEMS.find((w) => w.key === activeWorkflow)?.lede}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar On Day One Badges */}
+            <div className="mt-16 border-t border-rule pt-10">
+              <p className="text-center text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                Your sidebar, on day one
+              </p>
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
                 {[
-                  ["GSTR-3B · Sample Traders LLP", "Due in 2 days"],
-                  ["TDS 24Q · Demo Industries Pvt Ltd", "Due in 5 days"],
-                  ["Tax audit · Example Foods", "Workpapers in review"],
-                ].map(([task, status]) => (
-                  <div
-                    key={task}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded border border-border px-3 py-2 text-[13px]"
+                  { name: "Clients", icon: Users },
+                  { name: "Deadlines", icon: CalendarClock },
+                  { name: "Documents", icon: FileText },
+                  { name: "Fees", icon: Receipt },
+                  { name: "TDS Returns", icon: Landmark },
+                  { name: "Audits", icon: ClipboardCheck },
+                  { name: "Income Tax", icon: Building2 },
+                  { name: "Advance Tax", icon: Percent },
+                  { name: "Notice Tracker", icon: Scale },
+                  { name: "GST Reconciliation", icon: GitCompare },
+                  { name: "Client Emails", icon: Mail },
+                  { name: "Team", icon: UsersRound },
+                  { name: "Marketplace", icon: Store },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <span
+                      key={item.name}
+                      className="flex items-center gap-1.5 rounded-md border border-rule px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:border-input hover:text-foreground"
+                    >
+                      <Icon className="size-3.5 text-muted-foreground" />
+                      {item.name}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------- The Drafting Section ---------------- */}
+        <section className="border-t border-rule bg-card/30 py-20 sm:py-24">
+          <div className="mx-auto w-full max-w-6xl px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-brand text-xs font-semibold tracking-[0.14em] uppercase">
+                The drafting
+              </p>
+              <h2 className="mt-4 font-sans text-[1.75rem] leading-[1.15] font-semibold tracking-[-0.02em] text-balance sm:text-[2.125rem]">
+                An hour of drafting, in half a minute
+              </h2>
+              <p className="mt-4 text-[1.0625rem] leading-relaxed text-pretty text-muted-foreground">
+                One AI feature, done properly. It carries the facts across from the notice and
+                leaves every figure for you to fill in.
+              </p>
+            </div>
+
+            <div className="product-frame mt-12 bg-background">
+              <div className="grid divide-y divide-rule md:grid-cols-2 md:divide-x md:divide-y-0">
+                {/* Left: Notice Received */}
+                <div>
+                  <p className="border-b border-rule px-5 py-2.5 text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                    Notice, as received
+                  </p>
+                  <pre className="overflow-x-auto px-5 py-5 font-mono text-xs leading-relaxed whitespace-pre text-muted-foreground">
+{`NOTICE UNDER SECTION 143(2) OF THE
+INCOME-TAX ACT, 1961
+
+DIN: ITBA/AST/S/143(2)/2026-27/10982…
+Date: 12/08/2026
+
+Your case has been selected for
+scrutiny under CASS on the following
+issues:
+ (i)  Large deduction claimed under
+      Chapter VI-A
+ (ii) Substantial cash deposits not
+      commensurate with turnover`}
+                  </pre>
+                </div>
+
+                {/* Right: Draft Reply */}
+                <div>
+                  <p className="text-brand border-b border-rule px-5 py-2.5 text-[11px] font-semibold tracking-[0.12em] uppercase flex items-center justify-between">
+                    <span>Draft reply, 28 seconds later</span>
+                    <span className="text-muted-foreground font-normal text-[10px]">
+                      AI-assisted
+                    </span>
+                  </p>
+                  <div className="relative px-5 py-5">
+                    <pre className="overflow-x-auto font-mono text-xs leading-relaxed whitespace-pre text-foreground">
+{`To,
+The Assessing Officer
+Circle 2(1), Pune
+DIN: ITBA/AST/S/143(2)/2026-27/10982…
+
+Respected Sir/Madam,
+
+With reference to the captioned notice
+dated 12/08/2026 issued under section
+143(2) for Assessment Year 2026-27, the
+assessee respectfully submits as under.
+
+1. Large deduction claimed under
+   Chapter VI-A
+
+   The deduction claimed in the return
+   of income is ₹[state amount]…`}
+                    </pre>
+                    <div className="mt-3 flex items-center gap-1.5 text-xs text-brand font-mono">
+                      <span className="cursor-blink font-bold">●</span>
+                      <span>Annexure reconciliations attached. Reviewing partner signature pending.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p className="border-t border-rule px-5 py-3 text-xs text-muted-foreground">
+                The DIN, section, date and assessment year are carried through from the notice. Figures
+                are left as <span className="font-mono text-foreground">₹[state amount]</span> — never
+                invented. You fill them in and sign, as you always have.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------- Getting Started Section ---------------- */}
+        <section id="how-it-works" className="border-t border-rule py-20 sm:py-24">
+          <div className="mx-auto w-full max-w-6xl px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-brand text-xs font-semibold tracking-[0.14em] uppercase">
+                Getting started
+              </p>
+              <h2 className="mt-4 font-sans text-[1.75rem] leading-[1.15] font-semibold tracking-[-0.02em] text-balance sm:text-[2.125rem]">
+                Three steps, and the calendar is running
+              </h2>
+            </div>
+
+            <div className="mt-12 grid gap-10 border-t border-rule pt-10 md:grid-cols-3">
+              <div>
+                <p className="text-brand font-mono text-xs font-semibold tracking-[0.12em]">01</p>
+                <h3 className="mt-3 font-sans text-lg font-semibold tracking-tight">
+                  Set up your firm
+                </h3>
+                <p className="mt-2.5 text-pretty text-sm leading-relaxed text-muted-foreground">
+                  Firm name, your details, and staff if you have them. Under five minutes, and
+                  nothing is mandatory that you do not have to hand.
+                </p>
+              </div>
+
+              <div>
+                <p className="text-brand font-mono text-xs font-semibold tracking-[0.12em]">02</p>
+                <h3 className="mt-3 font-sans text-lg font-semibold tracking-tight">
+                  Add your clients and what you do for them
+                </h3>
+                <p className="mt-2.5 text-pretty text-sm leading-relaxed text-muted-foreground">
+                  Name, PAN, GSTIN, and the services you handle — ITR, GST, TDS, ROC, audit. The
+                  calendar fills itself in from the tags.
+                </p>
+              </div>
+
+              <div>
+                <p className="text-brand font-mono text-xs font-semibold tracking-[0.12em]">03</p>
+                <h3 className="mt-3 font-sans text-lg font-semibold tracking-tight">
+                  Work the day off one list
+                </h3>
+                <p className="mt-2.5 text-pretty text-sm leading-relaxed text-muted-foreground">
+                  Overdue first, then this week. Collect documents, reconcile, draft the reply, mark
+                  it filed, log the fee.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-12 text-center">
+              <button
+                onClick={onStart}
+                className="inline-flex h-12 items-center justify-center rounded-lg border border-border bg-background px-7 text-base font-medium text-foreground transition-colors hover:bg-muted/50"
+              >
+                See every screen
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------- Schedule of Rates / Pricing Section ---------------- */}
+        <section id="pricing" className="border-t border-rule bg-card/30 py-20 sm:py-24">
+          <div className="mx-auto w-full max-w-6xl px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-brand text-xs font-semibold tracking-[0.14em] uppercase">
+                Schedule of rates
+              </p>
+              <h2 className="mt-4 font-sans text-[1.75rem] leading-[1.15] font-semibold tracking-[-0.02em] text-balance sm:text-[2.125rem]">
+                Simple pricing
+              </h2>
+              <p className="mt-4 text-[1.0625rem] leading-relaxed text-pretty text-muted-foreground">
+                Start free. Upgrade when your client list outgrows it.
+              </p>
+            </div>
+
+            <div className="mt-12 grid divide-y divide-rule border-y border-rule sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x">
+              {PRICING_PLANS.map((plan) => (
+                <div
+                  key={plan.id}
+                  className="flex flex-col px-5 py-7 transition-colors first:pl-0 last:pr-0 hover:bg-card/60"
+                >
+                  <p
+                    className={`h-4 text-[11px] font-semibold tracking-[0.12em] uppercase ${
+                      plan.badgeBrand ? "text-brand" : "text-muted-foreground"
+                    }`}
                   >
-                    <span>{task}</span>
-                    <span className="text-[12px] text-muted-foreground">{status}</span>
+                    {plan.badge}
+                  </p>
+                  <h3 className="mt-3 font-sans font-medium text-foreground">{plan.name}</h3>
+                  <p className="tabular mt-1 text-3xl font-semibold tracking-tight text-foreground">
+                    {plan.price}
+                    {plan.period ? (
+                      <span className="text-sm font-normal text-muted-foreground">
+                        {plan.period}
+                      </span>
+                    ) : null}
+                  </p>
+
+                  <dl className="mt-6 flex-1 space-y-2.5 text-sm">
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">Clients</dt>
+                      <dd className="tabular text-right font-medium text-foreground">
+                        {plan.clients}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">AI drafts</dt>
+                      <dd className="tabular text-right font-medium text-foreground">
+                        {plan.aiDrafts}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">Team</dt>
+                      <dd className="tabular text-right font-medium text-foreground">{plan.team}</dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">Client portals</dt>
+                      <dd className="tabular text-right font-medium text-foreground">
+                        {plan.portals}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <button
+                    onClick={onStart}
+                    className="mt-6 w-full rounded border border-rule bg-surface py-2 text-center text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                  >
+                    Start free
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-12 text-center">
+              <button
+                onClick={onStart}
+                className="cta-lift inline-flex h-12 items-center justify-center rounded-lg bg-primary px-7 text-base font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                Start free — no credit card
+              </button>
+              <p className="mt-4 text-sm text-muted-foreground">
+                No card, no trial clock. Upgrades are applied by hand while we are small.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------- Currently Onboarding Section ---------------- */}
+        <section className="border-t border-rule py-20 sm:py-24">
+          <div className="mx-auto w-full max-w-6xl px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-brand text-xs font-semibold tracking-[0.14em] uppercase">
+                Currently onboarding
+              </p>
+              <h2 className="mt-4 font-sans text-[1.75rem] leading-[1.15] font-semibold tracking-[-0.02em] text-balance sm:text-[2.125rem]">
+                Run your practice with less chaos
+              </h2>
+              <p className="mt-4 text-[1.0625rem] leading-relaxed text-pretty text-muted-foreground">
+                We are signing up the first twenty firms. You would be early — the compliance rules
+                get checked against your practice, and what you ask for gets built. It also means
+                there are no testimonials on this page yet. We would rather leave the space empty
+                than invent one.
+              </p>
+
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                <button
+                  onClick={onStart}
+                  className="cta-lift inline-flex h-12 items-center justify-center rounded-lg bg-primary px-7 text-base font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Start using CAConnect
+                </button>
+                <a
+                  href="#pricing"
+                  className="inline-flex h-12 items-center justify-center rounded-lg border border-border bg-background px-7 text-base font-medium text-foreground transition-colors hover:bg-muted/50"
+                >
+                  Compare plans
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* ---------------- Footer ---------------- */}
+      <footer className="border-t border-rule/70 bg-card/20">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-10 text-sm text-muted-foreground">
+          <div>
+            <p className="font-medium text-foreground">CAConnect by Bevritti</p>
+            <p className="mt-1">© 2026 Bevritti. All rights reserved.</p>
+          </div>
+          <nav className="flex flex-wrap gap-x-6 gap-y-2">
+            <button
+              onClick={() => setShowFindCaModal(true)}
+              className="transition-colors hover:text-foreground"
+            >
+              Find a CA
+            </button>
+            <a className="transition-colors hover:text-foreground" href="#pricing">
+              Pricing
+            </a>
+            <a className="transition-colors hover:text-foreground" href="#how-it-works">
+              How it works
+            </a>
+            <button onClick={onLogin} className="transition-colors hover:text-foreground">
+              Log in
+            </button>
+          </nav>
+        </div>
+      </footer>
+
+      {/* ---------------- "Find a CA" Directory Modal ---------------- */}
+      {showFindCaModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="product-frame max-h-[90vh] w-full max-w-2xl overflow-y-auto bg-card p-6">
+            <div className="flex items-center justify-between border-b border-rule pb-3">
+              <div>
+                <h3 className="font-sans text-xl font-semibold text-foreground">
+                  Find a Chartered Accountant
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Empanelled Indian CA firms and independent practitioners.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowFindCaModal(false)}
+                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            <div className="mt-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search by city (e.g. Pune, Mumbai, Delhi) or specialization..."
+                  value={searchCity}
+                  onChange={(e) => setSearchCity(e.target.value)}
+                  className="field-input pl-9 text-sm"
+                />
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {filteredCAs.map((ca, idx) => (
+                  <div
+                    key={idx}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded border border-rule bg-background/60 p-3.5 transition-colors hover:border-brand/40"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-foreground text-sm">{ca.name}</p>
+                        <span className="flex items-center gap-0.5 rounded bg-success/10 px-1.5 py-0.2 text-[10px] text-success">
+                          <ShieldCheck className="size-3" /> ICAI Verified
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground flex items-center gap-2">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="size-3 text-brand" /> {ca.city}
+                        </span>
+                        <span>·</span>
+                        <span className="flex items-center gap-1">
+                          <Briefcase className="size-3" /> {ca.specialization}
+                        </span>
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setShowFindCaModal(false);
+                        onStart();
+                      }}
+                      className="btn-brand text-xs py-1 px-3"
+                    >
+                      Connect
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-          <p className="mt-4 text-[12px] text-muted-foreground">
-            Sign in with the demo credentials to open the full working dashboard.
-          </p>
-        </div>
-      </section>
 
-      {/* How it works */}
-      <section id="how-it-works" className="border-t border-border bg-surface/40 py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <h2 className="font-serif text-3xl tracking-tight sm:text-4xl">How it works</h2>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {STEPS.map(([n, title, body]) => (
-              <div key={n} className="border-t border-border-strong pt-5">
-                <p className="font-serif text-2xl text-brand">{n}</p>
-                <h3 className="mt-3 text-[15px] font-medium">{title}</h3>
-                <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Modules */}
-      <section id="find-a-ca" className="border-t border-border py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <h2 className="font-serif text-3xl tracking-tight sm:text-4xl">
-            Everything a practice runs on
-          </h2>
-          <p className="mt-4 max-w-2xl text-[15px] text-muted-foreground">
-            Thirteen modules that cover the working week of an Indian CA firm.
-          </p>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {MODULES.map(([title, body]) => (
-              <div key={title} className="card-surface p-4 transition-colors hover:border-brand/40">
-                <h3 className="text-[14px] font-medium">{title}</h3>
-                <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="border-t border-border bg-surface/40 py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <h2 className="font-serif text-3xl tracking-tight sm:text-4xl">Why firms switch</h2>
-          <div className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map(([title, body]) => (
-              <div key={title}>
-                <h3 className="text-[14px] font-medium">
-                  <span className="mr-2 text-brand">—</span>
-                  {title}
-                </h3>
-                <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section id="pricing" className="border-t border-border py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <h2 className="font-serif text-3xl tracking-tight sm:text-4xl">Simple pricing</h2>
-          <p className="mt-4 text-[15px] text-muted-foreground">
-            Start free. Upgrade when the client list grows.
-          </p>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {PLANS.map((p) => (
-              <div
-                key={p.name}
-                className={`card-surface flex flex-col p-5 ${
-                  p.highlight ? "border-brand/50" : ""
-                }`}
+            <div className="mt-6 border-t border-rule pt-4 text-center">
+              <button
+                onClick={() => setShowFindCaModal(false)}
+                className="text-xs text-muted-foreground hover:text-foreground"
               >
-                <p className="text-[13px] text-muted-foreground">{p.name}</p>
-                <p className="mt-3 font-serif text-3xl">
-                  {p.price}
-                  {p.per ? (
-                    <span className="text-[13px] font-sans text-muted-foreground">{p.per}</span>
-                  ) : null}
-                </p>
-                <p className="mt-2 text-[12px] text-muted-foreground">{p.note}</p>
-                <ul className="mt-5 flex-1 space-y-2 text-[13px] text-muted-foreground">
-                  {p.features.map((f) => (
-                    <li key={f}>· {f}</li>
-                  ))}
-                </ul>
-                <button
-                  onClick={onStart}
-                  className={`mt-6 ${p.highlight ? "btn-brand" : "btn-ghost-line"} w-full`}
-                >
-                  Start free
-                </button>
-              </div>
-            ))}
+                Close directory
+              </button>
+            </div>
           </div>
         </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="border-t border-border bg-surface/40 py-20">
-        <div className="mx-auto max-w-3xl px-5 text-center sm:px-8">
-          <h2 className="font-serif text-3xl tracking-tight sm:text-4xl">
-            Ready to run your CA firm without the chaos?
-          </h2>
-          <div className="mt-8">
-            <button onClick={onStart} className="btn-brand">
-              Start free
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border py-12">
-        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 sm:px-8 md:flex-row md:justify-between">
-          <div>
-            <Logo />
-            <p className="mt-3 text-[13px] text-muted-foreground">Built for Indian CA firms</p>
-          </div>
-          <div className="flex flex-wrap gap-6 text-[13px] text-muted-foreground">
-            {NAV_LINKS.map((l) => (
-              <a key={l.label} href={l.href} className="transition-colors hover:text-foreground">
-                {l.label}
-              </a>
-            ))}
-            <button onClick={onLogin} className="transition-colors hover:text-foreground">
-              Log in
-            </button>
-          </div>
-        </div>
-        <div className="mx-auto mt-10 max-w-6xl px-5 text-[12px] text-muted-foreground sm:px-8">
-          © 2026 CAConnect · Built for Indian CA firms
-        </div>
-      </footer>
+      ) : null}
     </div>
   );
 }

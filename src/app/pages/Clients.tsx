@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { useState } from "react";
 import { SERVICES } from "@/data/mockData";
 import { useStore } from "../store";
@@ -69,7 +71,7 @@ export default function Clients() {
                 <Th>Type</Th>
                 <Th>PAN</Th>
                 <Th>Services</Th>
-                <Th className="text-right">…</Th>
+                <Th className="text-right">â€¦</Th>
               </tr>
             </thead>
             <tbody>
@@ -78,7 +80,7 @@ export default function Clients() {
                   <Td className="font-medium text-foreground">{c.name}</Td>
                   <Td className="text-muted-foreground">{c.type}</Td>
                   <Td className="font-mono text-[12px] text-muted-foreground">{c.pan}</Td>
-                  <Td className="text-muted-foreground">{c.services.join(", ") || "—"}</Td>
+                  <Td className="text-muted-foreground">{c.services.join(", ") || "â€”"}</Td>
                   <Td className="text-right">
                     <MoreMenu
                       items={[

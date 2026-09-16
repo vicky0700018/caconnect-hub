@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { useState } from "react";
 import { NOTICE_TYPES } from "@/data/mockData";
 import { nextId, useStore } from "../store";
@@ -101,7 +103,7 @@ export default function AddNoticeMatter() {
               />
             </Field>
           </div>
-          <Field label="Amount in dispute (₹)">
+          <Field label="Amount in dispute (â‚¹)">
             <TextInput
               value={amount}
               onChange={(e) => setAmount(e.target.value)}

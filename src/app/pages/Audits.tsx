@@ -1,3 +1,5 @@
+﻿"use client";
+
 import { useState } from "react";
 import { AUDIT_TYPES, FINANCIAL_YEARS } from "@/data/mockData";
 import { nextId, useStore } from "../store";
@@ -36,8 +38,8 @@ export default function Audits() {
         year: fy,
         done: 0,
         total: type === "GST" ? 15 : 24,
-        assigned: "—",
-        due: "—",
+        assigned: "â€”",
+        due: "â€”",
         status: "Planning",
       },
       ...as,
