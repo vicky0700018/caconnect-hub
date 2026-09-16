@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { EMAIL_TOPICS } from "@/data/mockData";
-import { nextId, useStore } from "../store";
+import { useStore } from "../store";
 import {
   Button,
   Card,
@@ -21,39 +21,40 @@ const template = (client: string, topic: string, notes: string) => {
   switch (topic) {
     case "GST filing reminder":
       return {
-        subject: `GST filing for ${client} â€” documents needed this week`,
+        subject: `GST filing for ${client} — documents needed this week`,
         body: `Dear ${client},\n\nThis is a gentle reminder that your GSTR-1 and GSTR-3B for the current period fall due shortly. Please share the sales and purchase registers along with the bank statement so we can prepare and file on time.\n\nIf the figures are unchanged from last month, a quick confirmation is enough.${extra}${sign}`,
       };
     case "Document request follow-up":
       return {
-        subject: `Following up on pending documents â€” ${client}`,
+        subject: `Following up on pending documents — ${client}`,
         body: `Dear ${client},\n\nWe are still awaiting a few documents against the request we shared with you. The upload link remains active and does not need a login.\n\nOnce these come in, we will proceed with the filing straight away.${extra}${sign}`,
       };
     case "Fee outstanding reminder":
       return {
-        subject: `Invoice outstanding â€” ${client}`,
+        subject: `Invoice outstanding — ${client}`,
         body: `Dear ${client},\n\nOur records show an invoice still outstanding against the work completed for you. We would be grateful if you could arrange settlement at your convenience.\n\nDo let us know if you would like a copy of the invoice resent.${extra}${sign}`,
       };
     case "Income tax demand update":
       return {
-        subject: `Income tax demand â€” ${client}`,
+        subject: `Income tax demand — ${client}`,
         body: `Dear ${client},\n\nA demand has been raised on your income tax account. We have reviewed the intimation and believe it can be responded to within the statutory window.\n\nWe will prepare the response and revert with a draft for your approval before submitting it on the portal.${extra}${sign}`,
       };
     default:
       return {
-        subject: `Advance tax installment â€” ${client}`,
+        subject: `Advance tax installment — ${client}`,
         body: `Dear ${client},\n\nThe next advance tax installment is approaching. Based on the estimate on record, a shortfall would attract interest under sections 234B and 234C.\n\nPlease confirm the expected income position so we can finalise the challan amount.${extra}${sign}`,
       };
   }
 };
 
 export default function DraftEmail() {
-  const { clientNames, setEmails, setPage, toast } = useStore();
+  const { clientNames, saveEmailDraftAsync, setPage, toast } = useStore();
   const [client, setClient] = useState("");
   const [topic, setTopic] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [draft, setDraft] = useState<{ subject: string; body: string } | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const generate = () => {
     if (!client || !topic) {
@@ -65,32 +66,32 @@ export default function DraftEmail() {
     toast("Draft ready.");
   };
 
-  const save = () => {
+  const save = async () => {
     if (!draft) return;
-    setEmails((es) => [
-      {
-        id: nextId("em"),
+    setSaving(true);
+    try {
+      await saveEmailDraftAsync({
         client,
         topic,
         subject: draft.subject,
         body: draft.body,
-        createdAt: new Date().toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }),
-      },
-      ...es,
-    ]);
-    toast("Saved to client emails.");
-    setPage("Client Emails");
+        notes,
+      });
+      toast("Saved to client emails.");
+      setPage("Client Emails");
+    } catch (err) {
+      console.error(err);
+      toast("Failed to save draft", "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <>
       <PageHeader
         title="Draft a client email"
-        subtitle="Pick a client and a topic â€” the facts come from your own records."
+        subtitle="Pick a client and a topic — the facts come from your own records."
         actions={<Button onClick={() => setPage("Client Emails")}>Back</Button>}
       />
 
@@ -152,10 +153,19 @@ export default function DraftEmail() {
                 />
               </Field>
               <div className="flex gap-2">
-                <Button variant="primary" onClick={save}>
-                  Save draft
+                <Button variant="primary" onClick={save} disabled={saving}>
+                  {saving ? "Saving..." : "Save draft"}
                 </Button>
-                <Button onClick={() => toast("Copied to the demo clipboard.")}>Copy</Button>
+                <Button
+                  onClick={() => {
+                    if (navigator?.clipboard) {
+                      navigator.clipboard.writeText(`${draft.subject}\n\n${draft.body}`);
+                    }
+                    toast("Copied to clipboard.");
+                  }}
+                >
+                  Copy
+                </Button>
               </div>
             </div>
           )}

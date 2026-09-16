@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { AUDIT_TYPES, FINANCIAL_YEARS } from "@/data/mockData";
-import { nextId, useStore } from "../store";
+import { useStore } from "../store";
 import {
   Badge,
   Button,
@@ -18,33 +18,39 @@ import {
 } from "../ui";
 
 export default function Audits() {
-  const { clientNames, audits, setAudits, toast } = useStore();
+  const { clientNames, audits, addAuditAsync, updateAuditProgressAsync, toast } = useStore();
   const [client, setClient] = useState("");
   const [type, setType] = useState("");
   const [fy, setFy] = useState("FY2026-27");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const openEngagement = () => {
+  const openEngagement = async () => {
     if (!client || !type) {
       setError("Client and audit type are required.");
       return;
     }
     setError("");
-    setAudits((as) => [
-      {
-        id: nextId("a"),
+    setSubmitting(true);
+    try {
+      await addAuditAsync({
         client,
         audit: type,
         year: fy,
         done: 0,
         total: type === "GST" ? 15 : 24,
-        assigned: "â€”",
-        due: "â€”",
+        assigned: "Senior Associate",
+        due: "30 Sept",
         status: "Planning",
-      },
-      ...as,
-    ]);
-    toast(`${type} audit opened for ${client}.`);
+      });
+      toast(`${type} audit opened for ${client}.`);
+      setClient("");
+    } catch (err) {
+      console.error(err);
+      toast("Failed to open audit engagement", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -82,8 +88,8 @@ export default function Audits() {
               <Select value={fy} onChange={setFy} options={FINANCIAL_YEARS} />
             </Field>
             {error ? <p className="text-[12px] text-danger">{error}</p> : null}
-            <Button variant="primary" className="w-full" onClick={openEngagement}>
-              Open engagement
+            <Button variant="primary" className="w-full" onClick={openEngagement} disabled={submitting}>
+              {submitting ? "Opening..." : "Open engagement"}
             </Button>
           </div>
         </Card>
@@ -120,18 +126,8 @@ export default function Audits() {
                   <Td className="text-right">
                     <Button
                       size="sm"
-                      onClick={() => {
-                        setAudits((as) =>
-                          as.map((x) =>
-                            x.id === a.id
-                              ? {
-                                  ...x,
-                                  done: Math.min(x.total, x.done + 1),
-                                  status: x.done + 1 >= x.total ? "Completed" : "In Progress",
-                                }
-                              : x,
-                          ),
-                        );
+                      onClick={async () => {
+                        await updateAuditProgressAsync(a.id);
                         toast("Checklist item signed off.");
                       }}
                     >

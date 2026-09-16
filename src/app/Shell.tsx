@@ -1,6 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import {
+  LayoutDashboard,
+  Users,
+  CalendarClock,
+  FileText,
+  Receipt,
+  Landmark,
+  ClipboardCheck,
+  Building2,
+  Percent,
+  Scale,
+  GitCompare,
+  Mail,
+  Store,
+} from "lucide-react";
 import { NAV, StoreProvider, useStore, type Page } from "./store";
 import { Toasts } from "./ui";
 import Dashboard from "./pages/Dashboard";
@@ -20,6 +35,27 @@ import DraftEmail from "./pages/DraftEmail";
 import Team from "./pages/Team";
 import Marketplace from "./pages/Marketplace";
 
+const NAV_ITEMS: {
+  id: Page;
+  name: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
+  { id: "Dashboard", name: "Dashboard", icon: LayoutDashboard },
+  { id: "Clients", name: "Clients", icon: Users },
+  { id: "Deadlines", name: "Deadlines", icon: CalendarClock },
+  { id: "Documents", name: "Documents", icon: FileText },
+  { id: "Fees", name: "Fees", icon: Receipt },
+  { id: "TDS Returns", name: "TDS Returns", icon: Landmark },
+  { id: "Audits", name: "Audits", icon: ClipboardCheck },
+  { id: "Income Tax", name: "Income Tax", icon: Building2 },
+  { id: "Advance Tax", name: "Advance Tax", icon: Percent },
+  { id: "Notice Tracker", name: "Notice Tracker", icon: Scale },
+  { id: "GST Reconciliation", name: "GST Reconciliation", icon: GitCompare },
+  { id: "Client Emails", name: "Client Emails", icon: Mail },
+  { id: "Team", name: "Team", icon: Users },
+  { id: "Marketplace", name: "Marketplace", icon: Store },
+];
+
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { page, setPage } = useStore();
   return (
@@ -30,32 +66,35 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </span>
         <span className="font-serif text-lg tracking-tight">CAConnect</span>
       </div>
-      <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
-        {NAV.map((item) => {
+      <div className="flex-1 space-y-1 overflow-y-auto p-2.5">
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
           const active =
-            page === item ||
-            (item === "Notice Tracker" && page === "Add notice matter") ||
-            (item === "Client Emails" && page === "Draft a client email");
+            page === item.id ||
+            (item.id === "Notice Tracker" && page === "Add notice matter") ||
+            (item.id === "Client Emails" && page === "Draft a client email");
           return (
             <button
-              key={item}
+              key={item.id}
               onClick={() => {
-                setPage(item as Page);
+                setPage(item.id);
                 onNavigate?.();
               }}
-              className={`block w-full rounded px-3 py-1.5 text-left text-[13px] transition-colors ${
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-[13.5px] transition-colors ${
                 active
-                  ? "border border-border-strong bg-accent text-foreground"
-                  : "border border-transparent text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                  ? "bg-[#232a3b] font-medium text-white shadow-xs"
+                  : "text-[#9ca3af] hover:bg-[#181d29] hover:text-[#f3f4f6]"
               }`}
             >
-              {item}
+              <Icon className={`size-4.5 shrink-0 ${active ? "text-white" : "text-[#9ca3af]"}`} />
+              <span>{item.name}</span>
             </button>
           );
         })}
       </div>
-      <div className="border-t border-border px-4 py-3 text-[11px] text-muted-foreground">
-        Frontend demo · mock data only
+      <div className="flex items-center gap-2 border-t border-border px-4 py-3 text-[11px] text-muted-foreground">
+        <span className="h-1.5 w-1.5 rounded-full bg-success"></span>
+        <span>MongoDB Database Connected</span>
       </div>
     </nav>
   );

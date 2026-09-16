@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { formatINR } from "@/data/mockData";
-import { nextId, useStore } from "../store";
+import { useStore } from "../store";
 import {
   Button,
   Card,
@@ -19,25 +19,26 @@ import {
 } from "../ui";
 
 export default function GSTReconciliation() {
-  const { clientNames, recons, setRecons, toast } = useStore();
+  const { clientNames, recons, saveGstReconAsync, toast } = useStore();
   const [client, setClient] = useState("");
   const [month, setMonth] = useState("");
   const [register, setRegister] = useState("");
   const [json, setJson] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const run = () => {
+  const run = async () => {
     if (!client || !month || !register || !json) {
       setError("Client, month, purchase register and GSTR-2B JSON are all required.");
       return;
     }
     setError("");
-    const matched = 34;
-    const mismatched = 5;
-    const missing = 3;
-    setRecons((rs) => [
-      {
-        id: nextId("rc"),
+    setSubmitting(true);
+    try {
+      const matched = 34;
+      const mismatched = 5;
+      const missing = 3;
+      await saveGstReconAsync({
         client,
         month,
         matched,
@@ -45,12 +46,16 @@ export default function GSTReconciliation() {
         missing,
         registerTotal: 1842500,
         portalTotal: 1798300,
-      },
-      ...rs,
-    ]);
-    setRegister("");
-    setJson("");
-    toast("Reconciliation complete.");
+      });
+      setRegister("");
+      setJson("");
+      toast("Reconciliation complete.");
+    } catch (err) {
+      console.error(err);
+      toast("Failed to save reconciliation", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -89,13 +94,13 @@ export default function GSTReconciliation() {
             <Field
               label="GSTR-2B JSON"
               required
-              helper="Download from the GST portal â†’ Returns â†’ GSTR-2B â†’ Download JSON"
+              helper="Download from the GST portal → Returns → GSTR-2B → Download JSON"
             >
               <FileInput fileName={json} onPick={setJson} />
             </Field>
             {error ? <p className="text-[12px] text-danger">{error}</p> : null}
-            <Button variant="primary" className="w-full" onClick={run}>
-              Run reconciliation
+            <Button variant="primary" className="w-full" onClick={run} disabled={submitting}>
+              {submitting ? "Running..." : "Run reconciliation"}
             </Button>
           </div>
         </Card>

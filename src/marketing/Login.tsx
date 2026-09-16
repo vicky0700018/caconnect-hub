@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { DEMO_EMAIL, DEMO_PASSWORD, checkCredentials } from "@/app/auth";
+
+const DEMO_EMAIL = "demo@caconnect.com";
+const DEMO_PASSWORD = "demo123";
 
 export default function Login({
   onSuccess,
@@ -13,14 +15,33 @@ export default function Login({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (checkCredentials(email, password)) {
-      setError("");
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Invalid email or password");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(false);
       onSuccess();
-    } else {
-      setError("Invalid email or password");
+    } catch {
+      setError("Network error. Please check your connection.");
+      setLoading(false);
     }
   }
 
@@ -55,6 +76,7 @@ export default function Login({
                 id="email"
                 type="email"
                 autoComplete="email"
+                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="field-input"
@@ -69,6 +91,7 @@ export default function Login({
                 id="password"
                 type="password"
                 autoComplete="current-password"
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="field-input"
@@ -82,12 +105,13 @@ export default function Login({
               </p>
             ) : null}
 
-            <button type="submit" className="btn-brand w-full">
-              Sign in
+            <button type="submit" disabled={loading} className="btn-brand w-full">
+              {loading ? "Signing in..." : "Sign in"}
             </button>
 
             <button
               type="button"
+              disabled={loading}
               onClick={() => {
                 setEmail(DEMO_EMAIL);
                 setPassword(DEMO_PASSWORD);
@@ -101,8 +125,8 @@ export default function Login({
 
           <div className="mt-6 rounded border border-border bg-surface px-4 py-3 text-[12px] leading-relaxed text-muted-foreground">
             Demo credentials
-            <div className="mt-1 text-foreground">{DEMO_EMAIL}</div>
-            <div className="text-foreground">{DEMO_PASSWORD}</div>
+            <div className="mt-1 text-foreground font-mono">{DEMO_EMAIL}</div>
+            <div className="text-foreground font-mono">{DEMO_PASSWORD}</div>
           </div>
         </div>
       </div>

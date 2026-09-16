@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { FINANCIAL_YEARS, QUARTERS, TDS_FORMS, formatINR } from "@/data/mockData";
-import { nextId, useStore } from "../store";
+import { useStore } from "../store";
 import {
   Badge,
   Button,
@@ -17,32 +17,40 @@ import {
 } from "../ui";
 
 export default function TDSReturns() {
-  const { clientNames, tdsReturns, setTdsReturns, toast } = useStore();
+  const { clientNames, tdsReturns, addTdsReturnAsync, updateTdsReturnStatusAsync, toast } =
+    useStore();
   const [client, setClient] = useState("");
   const [fy, setFy] = useState("FY2026-27");
   const [quarter, setQuarter] = useState("Q2 FY2026-27");
-  const [form, setForm] = useState("24Q â€” Salary");
+  const [form, setForm] = useState("24Q — Salary");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const openReturn = () => {
+  const openReturn = async () => {
     if (!client) {
       setError("Choose a client to open a return.");
       return;
     }
     setError("");
-    setTdsReturns((rs) => [
-      {
-        id: nextId("t"),
+    setSubmitting(true);
+    try {
+      const formCode = form.split(" ")[0] ?? form;
+      await addTdsReturnAsync({
         client,
         quarter,
-        form: form.split(" ")[0] ?? form,
+        form: formCode,
         tdsTotal: 0,
         flags: 0,
         status: "Preparation",
-      },
-      ...rs,
-    ]);
-    toast(`${form.split(" ")[0] ?? form} opened for ${client}.`);
+      });
+      toast(`${formCode} opened for ${client}.`);
+      setClient("");
+    } catch (err) {
+      console.error(err);
+      toast("Failed to open return", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -70,12 +78,12 @@ export default function TDSReturns() {
             <Field label="Quarter" required>
               <Select value={quarter} onChange={setQuarter} options={QUARTERS} />
             </Field>
-            <Field label="Form" required helper="24Q â€” salary. 26Q â€” everything else.">
+            <Field label="Form" required helper="24Q — salary. 26Q — everything else.">
               <Select value={form} onChange={setForm} options={TDS_FORMS} />
             </Field>
             {error ? <p className="text-[12px] text-danger">{error}</p> : null}
-            <Button variant="primary" className="w-full" onClick={openReturn}>
-              Open return
+            <Button variant="primary" className="w-full" onClick={openReturn} disabled={submitting}>
+              {submitting ? "Opening..." : "Open return"}
             </Button>
           </div>
         </Card>
@@ -109,10 +117,8 @@ export default function TDSReturns() {
                     {r.status !== "Filed" ? (
                       <Button
                         size="sm"
-                        onClick={() => {
-                          setTdsReturns((rs) =>
-                            rs.map((x) => (x.id === r.id ? { ...x, status: "Filed", flags: 0 } : x)),
-                          );
+                        onClick={async () => {
+                          await updateTdsReturnStatusAsync(r.id, "Filed", 0);
                           toast("Return marked as filed.");
                         }}
                       >

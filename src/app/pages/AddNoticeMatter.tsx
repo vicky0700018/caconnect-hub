@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { NOTICE_TYPES } from "@/data/mockData";
-import { nextId, useStore } from "../store";
+import { useStore } from "../store";
 import {
   Button,
   Card,
@@ -15,7 +15,7 @@ import {
 } from "../ui";
 
 export default function AddNoticeMatter() {
-  const { clientNames, setNotices, setPage, toast } = useStore();
+  const { clientNames, addNoticeAsync, setPage, toast } = useStore();
   const [client, setClient] = useState("");
   const [title, setTitle] = useState("");
   const [type, setType] = useState("");
@@ -24,31 +24,38 @@ export default function AddNoticeMatter() {
   const [amount, setAmount] = useState("0.00");
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const submit = () => {
+  const submit = async () => {
     if (!client || !title.trim() || !type || !noticeDate) {
       setError("Client, matter title, notice type and notice date are required.");
       return;
     }
     setError("");
-    setNotices((ns) => [
-      {
-        id: nextId("n"),
+    setSubmitting(true);
+    try {
+      await addNoticeAsync({
         title: title.trim(),
         noticeType: type,
         client,
-        drafted: new Date().toLocaleDateString("en-GB", {
+        drafted: new Date(noticeDate).toLocaleDateString("en-GB", {
           day: "2-digit",
           month: "short",
           year: "numeric",
         }),
         status: "Received",
         amount: Number(amount.replace(/[, ]/g, "")) || 0,
-      },
-      ...ns,
-    ]);
-    toast("Matter added to the notice tracker.");
-    setPage("Notice Tracker");
+        notes: note,
+        deadline,
+      });
+      toast("Matter added to the notice tracker.");
+      setPage("Notice Tracker");
+    } catch (err) {
+      console.error(err);
+      toast("Failed to add notice matter", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -103,7 +110,7 @@ export default function AddNoticeMatter() {
               />
             </Field>
           </div>
-          <Field label="Amount in dispute (â‚¹)">
+          <Field label="Amount in dispute (₹)">
             <TextInput
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -118,8 +125,8 @@ export default function AddNoticeMatter() {
             />
           </Field>
           {error ? <p className="text-[12px] text-danger">{error}</p> : null}
-          <Button variant="primary" onClick={submit}>
-            Add matter
+          <Button variant="primary" onClick={submit} disabled={submitting}>
+            {submitting ? "Adding..." : "Add matter"}
           </Button>
         </div>
       </Card>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { formatINR } from "@/data/mockData";
@@ -21,7 +21,7 @@ import {
 const TABS = ["All", "Invoiced", "Overdue", "Paid", "Draft"];
 
 export default function Fees() {
-  const { fees, setFees, toast } = useStore();
+  const { fees, updateFeeStatusAsync, removeFeeAsync, toast } = useStore();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState("All");
 
@@ -48,7 +48,7 @@ export default function Fees() {
         <Kpi label="Collected this month" value={formatINR(collected)} tone="success" />
         <Kpi label="Outstanding" value={formatINR(outstanding)} />
         <Kpi
-          label={`Overdue Â· ${overdueList.length}`}
+          label={`Overdue · ${overdueList.length}`}
           value={formatINR(overdueList.reduce((s, f) => s + f.amount, 0))}
           tone="danger"
         />
@@ -66,7 +66,7 @@ export default function Fees() {
                 <Th>Amount</Th>
                 <Th>Due</Th>
                 <Th>Status</Th>
-                <Th className="text-right">â€¦</Th>
+                <Th className="text-right">…</Th>
               </tr>
             </thead>
             <tbody>
@@ -78,7 +78,7 @@ export default function Fees() {
                   </Td>
                   <Td className="text-muted-foreground">{f.client}</Td>
                   <Td className="whitespace-nowrap">{formatINR(f.amount)}</Td>
-                  <Td className="whitespace-nowrap text-muted-foreground">{f.due || "â€”"}</Td>
+                  <Td className="whitespace-nowrap text-muted-foreground">{f.due || "—"}</Td>
                   <Td>
                     <Badge>{f.status}</Badge>
                   </Td>
@@ -87,17 +87,15 @@ export default function Fees() {
                       items={[
                         {
                           label: "Mark paid",
-                          onClick: () => {
-                            setFees((fs) =>
-                              fs.map((x) => (x.id === f.id ? { ...x, status: "Paid" } : x)),
-                            );
+                          onClick: async () => {
+                            await updateFeeStatusAsync(f.id, "Paid");
                             toast("Fee marked as paid.");
                           },
                         },
                         {
                           label: "Delete",
-                          onClick: () => {
-                            setFees((fs) => fs.filter((x) => x.id !== f.id));
+                          onClick: async () => {
+                            await removeFeeAsync(f.id);
                             toast("Fee deleted.");
                           },
                         },

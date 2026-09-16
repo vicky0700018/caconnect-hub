@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { X, MessageCircle, Copy, Check } from "lucide-react";
 import * as M from "@/data/mockData";
 import { nextId, useStore } from "./store";
 import {
@@ -26,11 +27,13 @@ const todayLabel = () =>
 export function AddClientModal({
   open,
   onClose,
+  initialClient,
 }: {
   open: boolean;
   onClose: () => void;
+  initialClient?: M.Client | null;
 }) {
-  const { setClients, toast } = useStore();
+  const { addClientAsync, updateClientAsync, toast } = useStore();
   const [name, setName] = useState("");
   const [type, setType] = useState(M.CLIENT_TYPES[0] as string);
   const [kyc, setKyc] = useState("");
@@ -41,56 +44,100 @@ export function AddClientModal({
   const [services, setServices] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const reset = () => {
-    setName("");
-    setType(M.CLIENT_TYPES[0] as string);
-    setKyc("");
-    setPan("");
-    setGstin("");
-    setEmail("");
-    setPhone("");
-    setServices([]);
-    setNotes("");
-    setError("");
-  };
+  useEffect(() => {
+    if (initialClient) {
+      setName(initialClient.name || "");
+      setType(initialClient.type || (M.CLIENT_TYPES[0] as string));
+      setKyc(initialClient.kycEntityType || "");
+      setPan(initialClient.pan || "");
+      setGstin(initialClient.gstin || "");
+      setEmail(initialClient.email || "");
+      setPhone(initialClient.phone || "");
+      setServices(initialClient.services || []);
+      setNotes(initialClient.notes || "");
+      setError("");
+    } else {
+      setName("");
+      setType(M.CLIENT_TYPES[0] as string);
+      setKyc("");
+      setPan("");
+      setGstin("");
+      setEmail("");
+      setPhone("");
+      setServices([]);
+      setNotes("");
+      setError("");
+    }
+  }, [initialClient, open]);
 
-  const submit = () => {
-    if (!name.trim() || !kyc) {
-      setError("Client name and KYC entity type are required.");
+  const submit = async () => {
+    if (!name.trim()) {
+      setError("Client name is required.");
       return;
     }
-    setClients((cs) => [
-      ...cs,
-      {
-        id: nextId("c"),
-        name: name.trim(),
-        type,
-        kycEntityType: kyc,
-        pan: pan.trim().toUpperCase(),
-        gstin: gstin.trim().toUpperCase(),
-        email: email.trim(),
-        phone: phone.trim(),
-        services,
-        notes,
-      },
-    ]);
-    toast(`${name.trim()} added to your clients.`);
-    reset();
-    onClose();
+    setSubmitting(true);
+    try {
+      if (initialClient) {
+        await updateClientAsync(initialClient.id, {
+          name: name.trim(),
+          type,
+          kycEntityType: kyc || initialClient.kycEntityType || "Individual / Proprietor",
+          pan: pan.trim().toUpperCase(),
+          gstin: gstin.trim().toUpperCase(),
+          email: email.trim(),
+          phone: phone.trim(),
+          services,
+          notes,
+        });
+        toast(`${name.trim()} updated.`);
+      } else {
+        await addClientAsync({
+          name: name.trim(),
+          type,
+          kycEntityType: kyc || "Individual / Proprietor",
+          pan: pan.trim().toUpperCase(),
+          gstin: gstin.trim().toUpperCase(),
+          email: email.trim(),
+          phone: phone.trim(),
+          services,
+          notes,
+        });
+        toast(`${name.trim()} added to your clients.`);
+      }
+      onClose();
+    } catch (err) {
+      console.error(err);
+      toast(initialClient ? "Failed to update client" : "Failed to add client", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title="Add client"
-      description="Only the name is required — you can fill in the rest later."
+      title={initialClient ? "Edit client" : "Add client"}
+      description={
+        initialClient
+          ? "Update client details and compliance services."
+          : "Only the name is required — you can fill in the rest later."
+      }
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={submit}>
-            Add client
+          <Button onClick={onClose} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={submit} disabled={submitting}>
+            {submitting
+              ? initialClient
+                ? "Saving..."
+                : "Adding..."
+              : initialClient
+                ? "Save changes"
+                : "Add client"}
           </Button>
         </>
       }
@@ -186,24 +233,25 @@ export function AddDeadlineModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const { clientNames, setDeadlines, toast } = useStore();
+  const { clientNames, addDeadlineAsync, toast } = useStore();
   const [client, setClient] = useState("");
   const [what, setWhat] = useState("");
   const [service, setService] = useState("Other");
   const [due, setDue] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const submit = () => {
+  const submit = async () => {
     if (!client || !what.trim() || !due) {
       setError("Client, what is due and the due date are required.");
       return;
     }
     const dueDate = new Date(due);
     const days = Math.floor((Date.now() - dueDate.getTime()) / 86400000);
-    setDeadlines((ds) => [
-      {
-        id: nextId("d"),
+    setSubmitting(true);
+    try {
+      await addDeadlineAsync({
         task: what.trim(),
         service,
         period: notes.trim() || "One-off",
@@ -215,17 +263,21 @@ export function AddDeadlineModal({
           year: "numeric",
         }),
         status: days > 0 ? "Overdue" : "Open",
-      },
-      ...ds,
-    ]);
-    toast("Deadline added.");
-    setClient("");
-    setWhat("");
-    setService("Other");
-    setDue("");
-    setNotes("");
-    setError("");
-    onClose();
+      });
+      toast("Deadline added.");
+      setClient("");
+      setWhat("");
+      setService("Other");
+      setDue("");
+      setNotes("");
+      setError("");
+      onClose();
+    } catch (err) {
+      console.error(err);
+      toast("Failed to add deadline", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -236,9 +288,11 @@ export function AddDeadlineModal({
       description="For dates the compliance calendar cannot know — a notice reply-by date, a hearing, and ad-hoc filing."
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={submit}>
-            Add deadline
+          <Button onClick={onClose} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={submit} disabled={submitting}>
+            {submitting ? "Adding..." : "Add deadline"}
           </Button>
         </>
       }
@@ -292,7 +346,7 @@ export function RequestDocsModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const { clientNames, setDocRequests, toast } = useStore();
+  const { clientNames, addDocRequestAsync, toast } = useStore();
   const [client, setClient] = useState("");
   const [title, setTitle] = useState("");
   const [items, setItems] = useState<DocItem[]>([
@@ -301,6 +355,7 @@ export function RequestDocsModal({
   const [message, setMessage] = useState("");
   const [days, setDays] = useState("30");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const applyChecklist = (name: string) => {
     setTitle(name);
@@ -313,18 +368,20 @@ export function RequestDocsModal({
     );
   };
 
-  const submit = () => {
+  const submit = async () => {
     const named = items.filter((i) => i.name.trim());
     if (!client || !title.trim() || !named.length) {
       setError("Client, title and at least one document are required.");
       return;
     }
     const expires = new Date(Date.now() + Number(days || 30) * 86400000);
-    setDocRequests((rs) => [
-      {
-        id: nextId("dr"),
+    setSubmitting(true);
+    try {
+      await addDocRequestAsync({
         title: title.trim(),
         client,
+        items: named,
+        message,
         received: `0 of ${named.length}`,
         expires: expires.toLocaleDateString("en-GB", {
           day: "2-digit",
@@ -332,17 +389,21 @@ export function RequestDocsModal({
           year: "numeric",
         }),
         status: "Open",
-      },
-      ...rs,
-    ]);
-    toast("Upload link created and ready to share.");
-    setClient("");
-    setTitle("");
-    setItems([{ id: nextId("i"), name: "Form 16", required: true }]);
-    setMessage("");
-    setDays("30");
-    setError("");
-    onClose();
+      });
+      toast("Upload link created and ready to share.");
+      setClient("");
+      setTitle("");
+      setItems([{ id: nextId("i"), name: "Form 16", required: true }]);
+      setMessage("");
+      setDays("30");
+      setError("");
+      onClose();
+    } catch (err) {
+      console.error(err);
+      toast("Failed to create document request", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -353,9 +414,11 @@ export function RequestDocsModal({
       description="Your client gets a link they can upload from — no login required."
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={submit}>
-            Create link
+          <Button onClick={onClose} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={submit} disabled={submitting}>
+            {submitting ? "Creating..." : "Create link"}
           </Button>
         </>
       }
@@ -462,7 +525,7 @@ export function LogFeeModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const { clientNames, setFees, toast } = useStore();
+  const { clientNames, addFeeAsync, toast } = useStore();
   const [client, setClient] = useState("");
   const [forWhat, setForWhat] = useState("");
   const [amount, setAmount] = useState("");
@@ -470,16 +533,17 @@ export function LogFeeModal({
   const [status, setStatus] = useState<M.Fee["status"]>("Invoiced");
   const [due, setDue] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const submit = () => {
+  const submit = async () => {
     const num = Number(amount.replace(/,/g, ""));
     if (!client || !forWhat.trim() || !amount.trim() || Number.isNaN(num)) {
       setError("Client, what it is for and a valid amount are required.");
       return;
     }
-    setFees((fs) => [
-      {
-        id: nextId("f"),
+    setSubmitting(true);
+    try {
+      await addFeeAsync({
         forWhat: forWhat.trim(),
         service: service === "No service" ? "" : service,
         client,
@@ -492,18 +556,22 @@ export function LogFeeModal({
             })
           : "",
         status,
-      },
-      ...fs,
-    ]);
-    toast(`Fee logged for ${client}.`);
-    setClient("");
-    setForWhat("");
-    setAmount("");
-    setService("No service");
-    setStatus("Invoiced");
-    setDue("");
-    setError("");
-    onClose();
+      });
+      toast(`Fee logged for ${client}.`);
+      setClient("");
+      setForWhat("");
+      setAmount("");
+      setService("No service");
+      setStatus("Invoiced");
+      setDue("");
+      setError("");
+      onClose();
+    } catch (err) {
+      console.error(err);
+      toast("Failed to log fee", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -514,9 +582,11 @@ export function LogFeeModal({
       description="Track what you have billed and what has come in."
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={submit}>
-            Log fee
+          <Button onClick={onClose} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={submit} disabled={submitting}>
+            {submitting ? "Logging..." : "Log fee"}
           </Button>
         </>
       }
@@ -579,34 +649,36 @@ export function InviteModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const { setInvitations, toast } = useStore();
+  const { addTeamMemberAsync, toast } = useStore();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("Staff");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const submit = () => {
+  const submit = async () => {
     if (!email.includes("@")) {
       setError("A valid email address is required.");
       return;
     }
-    setInvitations((is) => [
-      ...is,
-      {
-        id: nextId("iv"),
+    setSubmitting(true);
+    try {
+      const name = email.split("@")[0] || "Team Member";
+      await addTeamMemberAsync({
+        name,
         email: email.trim(),
         role,
-        expires: new Date(Date.now() + 7 * 86400000).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }),
-      },
-    ]);
-    toast(`Invitation sent to ${email.trim()}.`);
-    setEmail("");
-    setRole("Staff");
-    setError("");
-    onClose();
+      });
+      toast(`Invitation sent to ${email.trim()}.`);
+      setEmail("");
+      setRole("Staff");
+      setError("");
+      onClose();
+    } catch (err) {
+      console.error(err);
+      toast("Failed to invite member", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -617,9 +689,11 @@ export function InviteModal({
       description={`Sent ${todayLabel()} · the link expires in 7 days.`}
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={submit}>
-            Send invitation
+          <Button onClick={onClose} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={submit} disabled={submitting}>
+            {submitting ? "Sending..." : "Send invitation"}
           </Button>
         </>
       }
@@ -642,3 +716,128 @@ export function InviteModal({
     </Modal>
   );
 }
+
+/* ---------------- Share Document Request Modal ---------------- */
+
+export function ShareDocModal({
+  open,
+  onClose,
+  request,
+}: {
+  open: boolean;
+  onClose: () => void;
+  request: M.DocRequest | null;
+}) {
+  const { toast } = useStore();
+  const [copied, setCopied] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
+  if (!open || !request) return null;
+
+  const uploadUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/upload/${request.id}`
+      : `https://caconnect.in/upload/${request.id}`;
+
+  const messageText = `Hi ${request.client}, please upload the requested documents (${request.title}) for your CA compliance using this secure link: ${uploadUrl}`;
+
+  const handleCopy = () => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(uploadUrl);
+    }
+    setCopied(true);
+    toast("Link copied to clipboard.");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleWhatsApp = () => {
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(messageText)}`;
+    window.open(waUrl, "_blank");
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="product-frame w-full max-w-lg bg-[#141721] border border-[#232736] p-6 rounded-lg shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="font-sans text-base font-semibold text-foreground">
+              Send this to {request.client}
+            </h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              They can upload from their phone — no account, no app.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded p-1 text-muted-foreground hover:bg-surface-2 hover:text-foreground transition-colors"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* WhatsApp Button */}
+        <div className="mt-5">
+          <button
+            type="button"
+            onClick={handleWhatsApp}
+            className="w-full flex items-center justify-center gap-2 rounded bg-[#f4f4ee] hover:bg-white text-[#12141d] font-medium py-2.5 text-xs transition-colors shadow-sm"
+          >
+            <MessageCircle className="size-4 fill-current" />
+            Send on WhatsApp
+          </button>
+        </div>
+
+        {/* Copy Link Section */}
+        <div className="mt-4">
+          <p className="mb-1.5 text-xs text-muted-foreground">Or copy the link</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              readOnly
+              value={uploadUrl}
+              className="flex-1 rounded border border-border bg-[#0d0e15] px-3 py-2 text-xs font-mono text-muted-foreground select-all focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleCopy}
+              title="Copy link"
+              className="flex items-center justify-center rounded border border-border bg-[#181b27] p-2 text-muted-foreground hover:bg-surface-2 hover:text-foreground transition-colors"
+            >
+              {copied ? <Check className="size-4 text-success" /> : <Copy className="size-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Preview Collapsible */}
+        <div className="mt-4 border border-border/60 rounded bg-[#0d0e15]/60 p-3">
+          <button
+            type="button"
+            onClick={() => setShowPreview(!showPreview)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-left"
+          >
+            <span className="text-[10px]">{showPreview ? "▼" : "▶"}</span>
+            <span>Preview the message</span>
+          </button>
+          {showPreview ? (
+            <div className="mt-2.5 pt-2.5 border-t border-border/40 text-xs text-muted-foreground leading-relaxed select-text">
+              {messageText}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-6 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded border border-border bg-[#1a1f2e] hover:bg-[#23293b] text-foreground px-4 py-1.5 text-xs font-medium transition-colors"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

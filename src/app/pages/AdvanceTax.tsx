@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { FINANCIAL_YEARS, formatINR } from "@/data/mockData";
-import { nextId, useStore } from "../store";
+import { useStore } from "../store";
 import {
   Badge,
   Button,
@@ -19,55 +19,60 @@ import {
 } from "../ui";
 
 export default function AdvanceTax() {
-  const { clientNames, estimates, setEstimates, toast } = useStore();
+  const { clientNames, estimates, addEstimateAsync, toast } = useStore();
   const [client, setClient] = useState("");
   const [fy, setFy] = useState("FY2026-27");
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const short = estimates.filter((e) => e.status === "Short");
   const exposure = short.reduce((s, e) => s + Math.max(0, e.estimated * 0.45 - e.paid) * 0.01 * 5, 0);
 
-  const save = () => {
+  const save = async () => {
     const value = Number(amount.replace(/[, ]/g, ""));
     if (!client || !value) {
       setError("Client and an estimated liability are required.");
       return;
     }
     setError("");
-    setEstimates((es) => [
-      {
-        id: nextId("ae"),
+    setSubmitting(true);
+    try {
+      await addEstimateAsync({
         client,
         fy,
         estimated: value,
         paid: 0,
-        nextDue: "15 Dec",
+        nextDue: "15 Dec (75%)",
         status: value > 10000 ? "Short" : "On track",
-      },
-      ...es,
-    ]);
-    setClient("");
-    setAmount("");
-    toast("Estimate saved.");
+      });
+      setClient("");
+      setAmount("");
+      toast("Estimate saved.");
+    } catch (err) {
+      console.error(err);
+      toast("Failed to save estimate", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <>
       <PageHeader
         title="Advance Tax"
-        subtitle="An estimate per client per year, checked against the four statutory dates â€” 15% by 15 Jun, 45% by 15 Sep, 75% by 15 Dec, 100% by 15 Mar."
+        subtitle="An estimate per client per year, checked against the four statutory dates — 15% by 15 Jun, 45% by 15 Sep, 75% by 15 Dec, 100% by 15 Mar."
       />
 
       <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi label="Clients short right now" value={short.length} tone="danger" />
+        <Kpi label="Clients short right now" value={short.length} tone={short.length > 0 ? "danger" : undefined} />
         <Kpi
           label="Total interest exposure"
-          value={formatINR(Math.max(552500, Math.round(exposure)))}
-          tone="danger"
+          value={formatINR(Math.round(exposure))}
+          tone={exposure > 0 ? "danger" : undefined}
         />
         <Kpi label="Due within 7 days" value={0} />
-        <Kpi label="Next installment, firm-wide" value="â€”" />
+        <Kpi label="Next installment, firm-wide" value="15 Dec" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
@@ -86,9 +91,9 @@ export default function AdvanceTax() {
               <Select value={fy} onChange={setFy} options={FINANCIAL_YEARS} />
             </Field>
             <Field
-              label="Estimated tax liability for the year (â‚¹)"
+              label="Estimated tax liability for the year (₹)"
               required
-              helper="After TDS/TCS already credited elsewhere â€” the net figure advance tax is actually computed on. Applies once this exceeds â‚¹10,000 (s.208)."
+              helper="After TDS/TCS already credited elsewhere — the net figure advance tax is actually computed on. Applies once this exceeds ₹10,000 (s.208)."
             >
               <TextInput
                 value={amount}
@@ -98,8 +103,8 @@ export default function AdvanceTax() {
               />
             </Field>
             {error ? <p className="text-[12px] text-danger">{error}</p> : null}
-            <Button variant="primary" className="w-full" onClick={save}>
-              Save estimate
+            <Button variant="primary" className="w-full" onClick={save} disabled={submitting}>
+              {submitting ? "Saving..." : "Save estimate"}
             </Button>
           </div>
         </Card>

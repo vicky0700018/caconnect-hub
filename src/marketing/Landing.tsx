@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   LayoutDashboard,
   Users,
@@ -345,12 +346,12 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
           </a>
 
           <nav className="hidden items-center gap-1 sm:flex">
-            <button
-              onClick={() => setShowFindCaModal(true)}
+            <Link
+              href="/find-a-ca"
               className="inline-flex h-7 items-center justify-center gap-1 rounded-md px-2.5 text-[0.8rem] font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
             >
               Find a CA
-            </button>
+            </Link>
             <a
               href="#workflows"
               className="inline-flex h-7 items-center justify-center gap-1 rounded-md px-2.5 text-[0.8rem] font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
@@ -408,15 +409,13 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
         {mobileMenu ? (
           <div className="border-t border-rule bg-card/95 px-6 py-4 sm:hidden">
             <div className="flex flex-col gap-3 text-sm">
-              <button
-                onClick={() => {
-                  setMobileMenu(false);
-                  setShowFindCaModal(true);
-                }}
+              <Link
+                href="/find-a-ca"
+                onClick={() => setMobileMenu(false)}
                 className="text-left text-muted-foreground transition-colors hover:text-foreground"
               >
                 Find a CA
-              </button>
+              </Link>
               <a
                 href="#workflows"
                 onClick={() => setMobileMenu(false)}
@@ -1485,12 +1484,12 @@ assessee respectfully submits as under.
             <p className="mt-1">© 2026 Bevritti. All rights reserved.</p>
           </div>
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
-            <button
-              onClick={() => setShowFindCaModal(true)}
+            <Link
+              href="/find-a-ca"
               className="transition-colors hover:text-foreground"
             >
               Find a CA
-            </button>
+            </Link>
             <a className="transition-colors hover:text-foreground" href="#pricing">
               Pricing
             </a>
@@ -1527,13 +1526,14 @@ assessee respectfully submits as under.
 
             <div className="mt-4">
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Search by city (e.g. Pune, Mumbai, Delhi) or specialization..."
                   value={searchCity}
                   onChange={(e) => setSearchCity(e.target.value)}
-                  className="field-input pl-9 text-sm"
+                  style={{ paddingLeft: "2.25rem" }}
+                  className="field-input text-sm"
                 />
               </div>
 

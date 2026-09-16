@@ -3,6 +3,7 @@
 import {
   useEffect,
   useState,
+  useRef,
   type ButtonHTMLAttributes,
   type ReactNode,
 } from "react";
@@ -403,43 +404,117 @@ export function SectionBar({ children }: { children: ReactNode }) {
 
 /* ---------------- More menu ---------------- */
 
-export function MoreMenu({ items }: { items: { label: string; onClick: () => void }[] }) {
+export interface MoreMenuItem {
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+  divider?: boolean;
+  icon?: ReactNode;
+}
+
+export function MoreMenu({
+  items,
+  align = "right",
+}: {
+  items: MoreMenuItem[];
+  align?: "left" | "right";
+}) {
   const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+
+  const toggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const menuWidth = 155;
+      const left =
+        align === "right"
+          ? Math.max(8, rect.right - menuWidth)
+          : Math.min(window.innerWidth - menuWidth - 8, rect.left);
+      setCoords({
+        top: rect.bottom + 4,
+        left,
+      });
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  };
+
   useEffect(() => {
     if (!open) return;
-    const close = () => setOpen(false);
-    window.addEventListener("click", close);
-    return () => window.removeEventListener("click", close);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    const handleScroll = () => setOpen(false);
+    window.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleScroll);
+    return () => {
+      window.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
+    };
   }, [open]);
+
   return (
-    <span className="relative inline-block">
+    <>
       <button
+        ref={buttonRef}
+        type="button"
         aria-label="More actions"
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((o) => !o);
-        }}
-        className="rounded px-2 py-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+        onClick={toggle}
+        className="inline-flex h-7 min-w-7 items-center justify-center rounded border border-border bg-surface-2 px-2 py-1 text-xs font-bold leading-none text-muted-foreground transition-colors hover:border-border-strong hover:bg-accent hover:text-foreground"
       >
-        …
+        •••
       </button>
-      {open ? (
-        <span className="absolute right-0 z-30 mt-1 block w-44 overflow-hidden rounded border border-border bg-surface-2 py-1 shadow-lg">
-          {items.map((it) => (
-            <button
-              key={it.label}
-              onClick={() => {
-                it.onClick();
-                setOpen(false);
-              }}
-              className="block w-full px-3 py-1.5 text-left text-[13px] text-foreground hover:bg-accent"
-            >
-              {it.label}
-            </button>
+      {open && coords ? (
+        <div
+          ref={menuRef}
+          style={{
+            position: "fixed",
+            top: coords.top,
+            left: coords.left,
+            zIndex: 9999,
+          }}
+          className="min-w-[155px] rounded-md border border-border bg-[#161922] p-1 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-100"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {items.map((it, idx) => (
+            <div key={idx}>
+              {it.divider ? <div className="my-1 border-t border-border/80" /> : null}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setOpen(false);
+                  it.onClick();
+                }}
+                className={`flex w-full items-center gap-2 rounded px-2.5 py-1.5 text-left text-[13px] transition-colors ${
+                  it.danger
+                    ? "text-danger hover:bg-danger/15 font-medium"
+                    : "text-foreground hover:bg-accent hover:text-foreground"
+                }`}
+              >
+                {it.icon ? <span className="shrink-0">{it.icon}</span> : null}
+                <span>{it.label}</span>
+              </button>
+            </div>
           ))}
-        </span>
+        </div>
       ) : null}
-    </span>
+    </>
   );
 }
 

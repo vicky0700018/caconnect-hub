@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { formatINR } from "@/data/mockData";
 import { useStore } from "../store";
@@ -14,7 +14,7 @@ import {
 } from "../ui";
 
 export default function NoticeTracker() {
-  const { notices, setNotices, setPage, toast } = useStore();
+  const { notices, removeNoticeAsync, setPage, toast } = useStore();
   const openAmount = notices.reduce((s, n) => s + (n.amount ?? 0), 0);
 
   return (
@@ -60,8 +60,8 @@ export default function NoticeTracker() {
                     <Button
                       size="sm"
                       variant="danger"
-                      onClick={() => {
-                        setNotices((ns) => ns.filter((x) => x.id !== n.id));
+                      onClick={async () => {
+                        await removeNoticeAsync(n.id);
                         toast("Matter deleted.");
                       }}
                     >
