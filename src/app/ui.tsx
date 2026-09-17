@@ -53,6 +53,7 @@ const badgeTone: Record<string, string> = {
   "On track": "bg-success-soft text-success border-success/40",
   Received: "bg-warn-soft text-warn border-warn/40",
   Preparation: "bg-warn-soft text-warn border-warn/40",
+  Draft: "bg-surface-2 text-muted-foreground border-border",
 };
 
 export function Badge({ children }: { children: ReactNode }) {

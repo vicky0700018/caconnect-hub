@@ -24,9 +24,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# local env files
+# local env & data files
 .env
 .env*.local
+.local-db.json
 
 # vercel
 .vercel

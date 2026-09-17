@@ -521,11 +521,13 @@ export function RequestDocsModal({
 export function LogFeeModal({
   open,
   onClose,
+  initialFee,
 }: {
   open: boolean;
   onClose: () => void;
+  initialFee?: M.Fee | null;
 }) {
-  const { clientNames, addFeeAsync, toast } = useStore();
+  const { clientNames, addFeeAsync, updateFeeAsync, toast } = useStore();
   const [client, setClient] = useState("");
   const [forWhat, setForWhat] = useState("");
   const [amount, setAmount] = useState("");
@@ -535,6 +537,26 @@ export function LogFeeModal({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (initialFee) {
+      setClient(initialFee.client || "");
+      setForWhat(initialFee.forWhat || "");
+      setAmount(initialFee.amount !== undefined ? String(initialFee.amount) : "");
+      setService(initialFee.service || "No service");
+      setStatus(initialFee.status || "Invoiced");
+      setDue(initialFee.due || "");
+      setError("");
+    } else {
+      setClient("");
+      setForWhat("");
+      setAmount("");
+      setService("No service");
+      setStatus("Invoiced");
+      setDue("");
+      setError("");
+    }
+  }, [initialFee, open]);
+
   const submit = async () => {
     const num = Number(amount.replace(/,/g, ""));
     if (!client || !forWhat.trim() || !amount.trim() || Number.isNaN(num)) {
@@ -543,32 +565,37 @@ export function LogFeeModal({
     }
     setSubmitting(true);
     try {
-      await addFeeAsync({
-        forWhat: forWhat.trim(),
-        service: service === "No service" ? "" : service,
-        client,
-        amount: num,
-        due: due
-          ? new Date(due).toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-          : "",
-        status,
-      });
-      toast(`Fee logged for ${client}.`);
-      setClient("");
-      setForWhat("");
-      setAmount("");
-      setService("No service");
-      setStatus("Invoiced");
-      setDue("");
-      setError("");
+      if (initialFee) {
+        await updateFeeAsync(initialFee.id, {
+          forWhat: forWhat.trim(),
+          service: service === "No service" ? "" : service,
+          client,
+          amount: num,
+          due: due,
+          status,
+        });
+        toast(`Fee updated for ${client}.`);
+      } else {
+        await addFeeAsync({
+          forWhat: forWhat.trim(),
+          service: service === "No service" ? "" : service,
+          client,
+          amount: num,
+          due: due
+            ? new Date(due).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+            : "",
+          status,
+        });
+        toast(`Fee logged for ${client}.`);
+      }
       onClose();
     } catch (err) {
       console.error(err);
-      toast("Failed to log fee", "error");
+      toast(initialFee ? "Failed to update fee" : "Failed to log fee", "error");
     } finally {
       setSubmitting(false);
     }
@@ -578,15 +605,25 @@ export function LogFeeModal({
     <Modal
       open={open}
       onClose={onClose}
-      title="Log a fee"
-      description="Track what you have billed and what has come in."
+      title={initialFee ? "Edit fee" : "Log a fee"}
+      description={
+        initialFee
+          ? "Update fee details, amount and status."
+          : "Track what you have billed and what has come in."
+      }
       footer={
         <>
           <Button onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
           <Button variant="primary" onClick={submit} disabled={submitting}>
-            {submitting ? "Logging..." : "Log fee"}
+            {submitting
+              ? initialFee
+                ? "Saving..."
+                : "Logging..."
+              : initialFee
+                ? "Save changes"
+                : "Log fee"}
           </Button>
         </>
       }

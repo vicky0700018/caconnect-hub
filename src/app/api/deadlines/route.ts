@@ -3,6 +3,18 @@ import { getAuthUser } from "@/lib/auth-server";
 import { getCollection } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
+function computeDaysOverdue(dueDateStr?: string): number {
+  if (!dueDateStr) return 0;
+  try {
+    const dueTime = new Date(dueDateStr).getTime();
+    if (isNaN(dueTime)) return 0;
+    const diff = Math.floor((Date.now() - dueTime) / 86400000);
+    return diff > 0 ? diff : 0;
+  } catch {
+    return 0;
+  }
+}
+
 export async function GET(request: Request) {
   const user = await getAuthUser(request);
   if (!user) {
@@ -11,37 +23,24 @@ export async function GET(request: Request) {
 
   try {
     const col = await getCollection("deadlines");
-
-    // Clean up any previously auto-seeded mock deadlines
-    const mockClients = [
-      "Orbit Software Solutions",
-      "Sunrise Textiles Pvt Ltd",
-      "Tushar Kumar",
-      "Anand Provision Stores",
-      "Ganesh Steel Works",
-      "Vaidya Healthcare LLP",
-      "Konark Foods",
-      "Pune Coworks LLP",
-    ];
-    await col.deleteMany({
-      userId: user.userId,
-      client: { $in: mockClients },
-    });
-
     const items = await col.find({ userId: user.userId }).sort({ dueDate: 1 }).toArray();
 
     return NextResponse.json({
-      deadlines: items.map((d) => ({
-        id: d._id.toString(),
-        task: d.task,
-        service: d.service,
-        period: d.period || "",
-        client: d.client,
-        daysOverdue: d.daysOverdue || 0,
-        dueDate: d.dueDate || "",
-        status: d.status || "Open",
-        notes: d.notes || "",
-      })),
+      deadlines: items.map((d) => {
+        const computed = computeDaysOverdue(d.dueDate);
+        const daysOverdue = d.daysOverdue > 0 ? d.daysOverdue : computed;
+        return {
+          id: d._id.toString(),
+          task: d.task,
+          service: d.service,
+          period: d.period || "",
+          client: d.client,
+          daysOverdue,
+          dueDate: d.dueDate || "",
+          status: d.status || (daysOverdue > 0 ? "Overdue" : "Open"),
+          notes: d.notes || "",
+        };
+      }),
     });
   } catch (err) {
     console.warn("MongoDB GET deadlines fallback:", err);
@@ -57,7 +56,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { task, service, period, client, dueDate, status, notes } = body;
+    const { task, service, period, client, dueDate, status, daysOverdue, notes } = body;
 
     if (!task || !client) {
       return NextResponse.json(
@@ -66,6 +65,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const calculatedDays = Number(daysOverdue) > 0 ? Number(daysOverdue) : computeDaysOverdue(dueDate);
     const col = await getCollection("deadlines");
     const doc = {
       userId: user.userId,
@@ -73,9 +73,9 @@ export async function POST(request: Request) {
       service: service || "General",
       period: period || "",
       client: client.trim(),
-      daysOverdue: 0,
+      daysOverdue: calculatedDays,
       dueDate: dueDate || new Date().toISOString().split("T")[0],
-      status: status || "Open",
+      status: status || (calculatedDays > 0 ? "Overdue" : "Open"),
       notes: notes || "",
       createdAt: new Date().toISOString(),
     };

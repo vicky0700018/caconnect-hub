@@ -1,6 +1,10 @@
 import { MongoClient, Db, Collection, Document, ObjectId } from "mongodb";
 
+import fs from "fs";
+import path from "path";
+
 const DB_NAME = "caconnect";
+const LOCAL_DB_PATH = path.join(process.cwd(), ".local-db.json");
 
 declare global {
   var _mongoClient: MongoClient | undefined;
@@ -10,12 +14,38 @@ declare global {
   var _isUsingMemoryFallback: boolean | undefined;
 }
 
+function loadLocalStore(): Record<string, any[]> {
+  try {
+    if (fs.existsSync(LOCAL_DB_PATH)) {
+      const content = fs.readFileSync(LOCAL_DB_PATH, "utf-8");
+      if (content.trim()) {
+        return JSON.parse(content);
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to load local fallback DB:", e);
+  }
+  return {};
+}
+
+function saveLocalStore() {
+  try {
+    if (global._memoryStore) {
+      fs.writeFileSync(LOCAL_DB_PATH, JSON.stringify(global._memoryStore, null, 2), "utf-8");
+    }
+  } catch (e) {
+    console.warn("Failed to save local fallback DB:", e);
+  }
+}
+
 if (!global._memoryStore) {
-  global._memoryStore = {};
+  global._memoryStore = loadLocalStore();
 }
 
 function getMemoryStore(collectionName: string): any[] {
-  if (!global._memoryStore) global._memoryStore = {};
+  if (!global._memoryStore) {
+    global._memoryStore = loadLocalStore();
+  }
   if (!global._memoryStore[collectionName]) {
     global._memoryStore[collectionName] = [];
   }
@@ -106,6 +136,7 @@ class MemoryCollection<T extends Document = Document> {
       ...doc,
     };
     store.unshift(newDoc);
+    saveLocalStore();
     return { insertedId: id };
   }
 
@@ -122,6 +153,7 @@ class MemoryCollection<T extends Document = Document> {
       store.unshift(newDoc);
       insertedIds[idx] = id;
     });
+    saveLocalStore();
     return { insertedIds };
   }
 
@@ -138,6 +170,7 @@ class MemoryCollection<T extends Document = Document> {
       _id: current._id,
       id: current.id || current._id?.toString(),
     };
+    saveLocalStore();
     return { matchedCount: 1, modifiedCount: 1 };
   }
 
@@ -146,6 +179,7 @@ class MemoryCollection<T extends Document = Document> {
     const idx = store.findIndex((doc) => this.matchesQuery(doc, query));
     if (idx === -1) return { deletedCount: 0 };
     store.splice(idx, 1);
+    saveLocalStore();
     return { deletedCount: 1 };
   }
 
@@ -158,6 +192,7 @@ class MemoryCollection<T extends Document = Document> {
         count++;
       }
     }
+    saveLocalStore();
     return { deletedCount: count };
   }
 

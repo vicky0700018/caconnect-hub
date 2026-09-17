@@ -48,32 +48,47 @@ export default function Deadlines() {
     toast(to === "Filed" ? "Marked as filed." : "Started — moved to in progress.");
   };
 
+  const getDaysOverdue = (d: (typeof deadlines)[0]) => {
+    if (d.daysOverdue && d.daysOverdue > 0) return d.daysOverdue;
+    if (!d.dueDate) return 0;
+    try {
+      const parsed = new Date(d.dueDate).getTime();
+      if (isNaN(parsed)) return 0;
+      const diff = Math.floor((Date.now() - parsed) / 86400000);
+      return diff > 0 ? diff : 0;
+    } catch {
+      return 0;
+    }
+  };
+
   const rows = (list: typeof deadlines) =>
-    list.map((d) => (
-      <tr
-        key={d.id}
-        className="border-b border-border/70 hover:bg-surface-2/40 transition-colors"
-      >
-        <Td className="py-3 px-4">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-foreground text-[13px]">{d.task}</span>
-            {d.period ? (
-              <span className="text-[12px] font-normal text-muted-foreground">{d.period}</span>
-            ) : null}
-          </div>
-          <div className="text-[12px] text-muted-foreground mt-0.5">{d.client}</div>
-        </Td>
-        <Td className="whitespace-nowrap text-right py-3 px-4">
-          <div className="inline-flex items-center justify-end gap-3 sm:gap-4">
-            {/* Days overdue & Due date */}
-            <div className="text-right">
-              {d.status === "Overdue" && d.daysOverdue > 0 ? (
-                <div className="text-[12px] font-normal text-danger">
-                  {d.daysOverdue} days overdue
-                </div>
+    list.map((d) => {
+      const overdueDays = getDaysOverdue(d);
+      return (
+        <tr
+          key={d.id}
+          className="border-b border-border/70 hover:bg-surface-2/40 transition-colors"
+        >
+          <Td className="py-3 px-4">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-foreground text-[13px]">{d.task}</span>
+              {d.period ? (
+                <span className="text-[12px] font-normal text-muted-foreground">{d.period}</span>
               ) : null}
-              <div className="text-[11px] text-muted-foreground">{d.dueDate}</div>
             </div>
+            <div className="text-[12px] text-muted-foreground mt-0.5">{d.client}</div>
+          </Td>
+          <Td className="whitespace-nowrap text-right py-3 px-4">
+            <div className="inline-flex items-center justify-end gap-3 sm:gap-4">
+              {/* Days overdue & Due date */}
+              <div className="text-right">
+                {d.status === "Overdue" && overdueDays > 0 ? (
+                  <div className="text-[12px] font-normal text-danger">
+                    {overdueDays} days overdue
+                  </div>
+                ) : null}
+                <div className="text-[11px] text-muted-foreground">{d.dueDate}</div>
+              </div>
 
             {/* Status badge */}
             <div className="min-w-[65px] text-center">
@@ -136,7 +151,8 @@ export default function Deadlines() {
           </div>
         </Td>
       </tr>
-    ));
+    );
+  });
 
   return (
     <>

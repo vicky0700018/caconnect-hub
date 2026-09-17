@@ -82,10 +82,10 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { id, status } = body;
+    const { id, forWhat, service, client, amount, due, status } = body;
 
-    if (!id || !status) {
-      return NextResponse.json({ error: "id and status are required" }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
 
     const col = await getCollection("fees");
@@ -96,8 +96,17 @@ export async function PATCH(request: Request) {
       query = { id, userId: user.userId };
     }
 
+    const updateDoc: any = {};
+    if (forWhat !== undefined) updateDoc.forWhat = forWhat.trim();
+    if (service !== undefined) updateDoc.service = service;
+    if (client !== undefined) updateDoc.client = client.trim();
+    if (amount !== undefined) updateDoc.amount = Number(amount) || 0;
+    if (due !== undefined) updateDoc.due = due;
+    if (status !== undefined) updateDoc.status = status;
+    updateDoc.updatedAt = new Date().toISOString();
+
     await col.updateOne(query, {
-      $set: { status, updatedAt: new Date().toISOString() },
+      $set: updateDoc,
     });
 
     return NextResponse.json({ success: true });

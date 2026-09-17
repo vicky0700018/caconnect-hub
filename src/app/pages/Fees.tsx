@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { formatINR } from "@/data/mockData";
+import { Pencil, Trash2 } from "lucide-react";
+import { formatINR, type Fee } from "@/data/mockData";
 import { useStore } from "../store";
 import { LogFeeModal } from "../modals";
 import {
@@ -23,6 +24,7 @@ const TABS = ["All", "Invoiced", "Overdue", "Paid", "Draft"];
 export default function Fees() {
   const { fees, updateFeeStatusAsync, removeFeeAsync, toast } = useStore();
   const [open, setOpen] = useState(false);
+  const [editingFee, setEditingFee] = useState<Fee | null>(null);
   const [tab, setTab] = useState("All");
 
   const collected = fees.filter((f) => f.status === "Paid").reduce((s, f) => s + f.amount, 0);
@@ -38,7 +40,13 @@ export default function Fees() {
         title="Fees"
         subtitle="What you have billed and what has come in."
         actions={
-          <Button variant="primary" onClick={() => setOpen(true)}>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setEditingFee(null);
+              setOpen(true);
+            }}
+          >
             + Log fee
           </Button>
         }
@@ -60,31 +68,62 @@ export default function Fees() {
         {rows.length ? (
           <TableWrap>
             <thead>
-              <tr>
+              <tr className="border-b border-border bg-surface">
                 <Th>For</Th>
                 <Th>Client</Th>
                 <Th>Amount</Th>
                 <Th>Due</Th>
                 <Th>Status</Th>
-                <Th className="text-right">…</Th>
+                <Th className="text-right">•••</Th>
               </tr>
             </thead>
             <tbody>
               {rows.map((f) => (
-                <tr key={f.id}>
-                  <Td>
-                    <div className="font-medium text-foreground">{f.forWhat}</div>
-                    <div className="text-[12px] text-muted-foreground">{f.service}</div>
+                <tr
+                  key={f.id}
+                  className="border-b border-border/70 hover:bg-surface-2/40 transition-colors"
+                >
+                  <Td className="py-3 px-4">
+                    <div className="font-semibold text-foreground text-[13px]">{f.forWhat}</div>
+                    {f.service ? (
+                      <div className="text-[12px] text-muted-foreground mt-0.5">{f.service}</div>
+                    ) : null}
                   </Td>
-                  <Td className="text-muted-foreground">{f.client}</Td>
-                  <Td className="whitespace-nowrap">{formatINR(f.amount)}</Td>
-                  <Td className="whitespace-nowrap text-muted-foreground">{f.due || "—"}</Td>
-                  <Td>
+                  <Td className="py-3 px-4 text-[13px] text-muted-foreground">{f.client}</Td>
+                  <Td className="whitespace-nowrap py-3 px-4 font-medium text-[13px] text-foreground">
+                    {formatINR(f.amount)}
+                  </Td>
+                  <Td className="whitespace-nowrap py-3 px-4 text-[12px] text-muted-foreground">
+                    {f.due || "—"}
+                  </Td>
+                  <Td className="whitespace-nowrap py-3 px-4">
                     <Badge>{f.status}</Badge>
                   </Td>
-                  <Td className="text-right">
+                  <Td className="whitespace-nowrap text-right py-3 px-4">
                     <MoreMenu
                       items={[
+                        {
+                          label: "Edit",
+                          icon: <Pencil className="size-3.5" />,
+                          onClick: () => {
+                            setEditingFee(f);
+                            setOpen(true);
+                          },
+                        },
+                        {
+                          label: "Mark draft",
+                          onClick: async () => {
+                            await updateFeeStatusAsync(f.id, "Draft");
+                            toast("Fee marked as draft.");
+                          },
+                        },
+                        {
+                          label: "Mark invoiced",
+                          onClick: async () => {
+                            await updateFeeStatusAsync(f.id, "Invoiced");
+                            toast("Fee marked as invoiced.");
+                          },
+                        },
                         {
                           label: "Mark paid",
                           onClick: async () => {
@@ -93,10 +132,13 @@ export default function Fees() {
                           },
                         },
                         {
-                          label: "Delete",
+                          label: "Remove",
+                          danger: true,
+                          divider: true,
+                          icon: <Trash2 className="size-3.5 text-danger" />,
                           onClick: async () => {
                             await removeFeeAsync(f.id);
-                            toast("Fee deleted.");
+                            toast("Fee removed.");
                           },
                         },
                       ]}
@@ -111,7 +153,14 @@ export default function Fees() {
         )}
       </Card>
 
-      <LogFeeModal open={open} onClose={() => setOpen(false)} />
+      <LogFeeModal
+        open={open}
+        initialFee={editingFee}
+        onClose={() => {
+          setOpen(false);
+          setEditingFee(null);
+        }}
+      />
     </>
   );
 }

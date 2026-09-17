@@ -285,6 +285,19 @@ function useStoreValue() {
     }
   };
 
+  const updateFeeAsync = async (id: string, updates: Partial<M.Fee>) => {
+    try {
+      setFees((fs) => fs.map((f) => (f.id === id ? { ...f, ...updates } : f)));
+      await fetch("/api/fees", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...updates }),
+      });
+    } catch (e) {
+      console.error("Failed to update fee:", e);
+    }
+  };
+
   const updateFeeStatusAsync = async (id: string, status: string) => {
     try {
       setFees((fs) => fs.map((f) => (f.id === id ? { ...f, status: status as any } : f)));
@@ -362,6 +375,15 @@ function useStoreValue() {
       });
     } catch (e) {
       console.error("Failed to update TDS return status:", e);
+    }
+  };
+
+  const removeTdsReturnAsync = async (id: string) => {
+    try {
+      setTdsReturns((rs) => rs.filter((r) => r.id !== id));
+      await fetch(`/api/tds-returns?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch (e) {
+      console.error("Failed to delete TDS return:", e);
     }
   };
 
@@ -590,12 +612,14 @@ function useStoreValue() {
     addDocRequestAsync,
     removeDocRequestAsync,
     addFeeAsync,
+    updateFeeAsync,
     updateFeeStatusAsync,
     removeFeeAsync,
     addNoticeAsync,
     removeNoticeAsync,
     addTdsReturnAsync,
     updateTdsReturnStatusAsync,
+    removeTdsReturnAsync,
     addAuditAsync,
     updateAuditProgressAsync,
     addDemandAsync,
