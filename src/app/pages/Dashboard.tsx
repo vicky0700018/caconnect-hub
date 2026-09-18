@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { formatINR } from "@/data/mockData";
 import { useStore } from "../store";
 import { AddClientModal, LogFeeModal, RequestDocsModal } from "../modals";
@@ -27,6 +28,7 @@ export default function Dashboard() {
     demands,
     estimates,
     updateDeadlineStatusAsync,
+    removeDeadlineAsync,
     setPage,
     toast,
   } = useStore();
@@ -141,20 +143,58 @@ export default function Dashboard() {
                     <Badge>{d.status}</Badge>
                   </Td>
                   <Td className="text-right whitespace-nowrap">
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        advance(d.id, d.status === "In Progress" ? "Filed" : "In Progress")
-                      }
-                    >
-                      {d.status === "In Progress" ? "Mark filed" : "Start"}
-                    </Button>
-                    <MoreMenu
-                      items={[
-                        { label: "Mark filed", onClick: () => advance(d.id, "Filed") },
-                        { label: "Open client", onClick: () => setPage("Clients") },
-                      ]}
-                    />
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          advance(d.id, d.status === "In Progress" ? "Filed" : "In Progress")
+                        }
+                      >
+                        {d.status === "In Progress" ? "Mark filed" : "✓ Start"}
+                      </Button>
+                      <MoreMenu
+                        items={[
+                          {
+                            label: "Mark pending",
+                            onClick: async () => {
+                              await updateDeadlineStatusAsync(d.id, "Open");
+                              toast("Marked as pending.");
+                            },
+                          },
+                          {
+                            label: "Mark in progress",
+                            onClick: async () => {
+                              await updateDeadlineStatusAsync(d.id, "In Progress");
+                              toast("Marked in progress.");
+                            },
+                          },
+                          {
+                            label: "Mark filed",
+                            onClick: async () => {
+                              await updateDeadlineStatusAsync(d.id, "Filed");
+                              toast("Marked as filed.");
+                            },
+                          },
+                          {
+                            label: "Mark done",
+                            onClick: async () => {
+                              await updateDeadlineStatusAsync(d.id, "Filed");
+                              toast("Marked as done.");
+                            },
+                          },
+                          {
+                            label: "Remove",
+                            danger: true,
+                            divider: true,
+                            icon: <Trash2 className="size-3.5" />,
+                            onClick: async () => {
+                              await removeDeadlineAsync(d.id);
+                              toast("Deadline removed.");
+                            },
+                          },
+                        ]}
+                      />
+                    </div>
                   </Td>
                 </tr>
               ))}

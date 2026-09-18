@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { Scale } from "lucide-react";
 import { formatINR } from "@/data/mockData";
 import { useStore } from "../store";
 import {
   Button,
   Card,
   CardTitle,
-  EmptyState,
   Field,
   FileInput,
   PageHeader,
@@ -108,10 +108,15 @@ export default function GSTReconciliation() {
         <Card>
           <CardTitle>Past runs</CardTitle>
           {recons.length === 0 ? (
-            <EmptyState
-              title="No reconciliations yet"
-              hint="Upload a purchase register and GSTR-2B to run your first comparison."
-            />
+            <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+              <div className="size-12 rounded-full bg-surface-2 border border-border/80 flex items-center justify-center text-muted-foreground mb-3">
+                <Scale className="size-6" />
+              </div>
+              <p className="text-sm font-medium text-foreground">No reconciliations yet</p>
+              <p className="mt-1 max-w-sm text-[13px] text-muted-foreground">
+                Upload a purchase register and GSTR-2B to run your first comparison.
+              </p>
+            </div>
           ) : (
             <div className="divide-y divide-border">
               {recons.map((r) => (

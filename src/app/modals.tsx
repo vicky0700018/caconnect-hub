@@ -22,6 +22,41 @@ const todayLabel = () =>
     year: "numeric",
   });
 
+/* ---------------- GSTIN Helper ---------------- */
+
+function getGstinCheckDigitWarning(gstin: string): string | null {
+  const g = gstin.trim().toUpperCase();
+  if (!g || g.length === 0) return null;
+  if (g.length < 15) return null;
+
+  const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+  if (!gstinRegex.test(g)) {
+    return "This GSTIN's check digit does not match. Saving anyway — please verify.";
+  }
+
+  let factor = 1;
+  let sum = 0;
+  for (let i = 0; i < 14; i++) {
+    const code = chars.indexOf(g[i]);
+    if (code === -1) return "This GSTIN's check digit does not match. Saving anyway — please verify.";
+    const product = code * factor;
+    factor = factor === 1 ? 2 : 1;
+    const quotient = Math.floor(product / 36);
+    const remainder = product % 36;
+    sum += quotient + remainder;
+  }
+  const remainder = sum % 36;
+  const checkDigitIndex = (36 - remainder) % 36;
+  const expectedCheckChar = chars[checkDigitIndex];
+
+  if (g[14] !== expectedCheckChar) {
+    return "This GSTIN's check digit does not match. Saving anyway — please verify.";
+  }
+
+  return null;
+}
+
 /* ---------------- Add client ---------------- */
 
 export function AddClientModal({
@@ -36,12 +71,14 @@ export function AddClientModal({
   const { addClientAsync, updateClientAsync, toast } = useStore();
   const [name, setName] = useState("");
   const [type, setType] = useState(M.CLIENT_TYPES[0] as string);
-  const [kyc, setKyc] = useState("");
+  const [kyc, setKyc] = useState(M.KYC_ENTITY_TYPES[0] as string);
   const [pan, setPan] = useState("");
   const [gstin, setGstin] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [services, setServices] = useState<string[]>([]);
+  const [isAuditCase, setIsAuditCase] = useState(false);
+  const [agmDate, setAgmDate] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -50,27 +87,33 @@ export function AddClientModal({
     if (initialClient) {
       setName(initialClient.name || "");
       setType(initialClient.type || (M.CLIENT_TYPES[0] as string));
-      setKyc(initialClient.kycEntityType || "");
+      setKyc(initialClient.kycEntityType || (M.KYC_ENTITY_TYPES[0] as string));
       setPan(initialClient.pan || "");
       setGstin(initialClient.gstin || "");
       setEmail(initialClient.email || "");
       setPhone(initialClient.phone || "");
       setServices(initialClient.services || []);
+      setIsAuditCase(!!initialClient.isAuditCase);
+      setAgmDate(initialClient.agmDate || "");
       setNotes(initialClient.notes || "");
       setError("");
     } else {
       setName("");
       setType(M.CLIENT_TYPES[0] as string);
-      setKyc("");
+      setKyc(M.KYC_ENTITY_TYPES[0] as string);
       setPan("");
       setGstin("");
       setEmail("");
       setPhone("");
       setServices([]);
+      setIsAuditCase(false);
+      setAgmDate("");
       setNotes("");
       setError("");
     }
   }, [initialClient, open]);
+
+  const gstinWarning = getGstinCheckDigitWarning(gstin);
 
   const submit = async () => {
     if (!name.trim()) {
@@ -89,6 +132,8 @@ export function AddClientModal({
           email: email.trim(),
           phone: phone.trim(),
           services,
+          isAuditCase: services.includes("ITR") ? isAuditCase : false,
+          agmDate: services.includes("ROC") ? agmDate : "",
           notes,
         });
         toast(`${name.trim()} updated.`);
@@ -102,6 +147,8 @@ export function AddClientModal({
           email: email.trim(),
           phone: phone.trim(),
           services,
+          isAuditCase: services.includes("ITR") ? isAuditCase : false,
+          agmDate: services.includes("ROC") ? agmDate : "",
           notes,
         });
         toast(`${name.trim()} added to your clients.`);
@@ -148,11 +195,17 @@ export function AddClientModal({
         </div>
       ) : null}
       <Field label="Client name" required>
-        <TextInput value={name} onChange={(e) => setName(e.target.value)} />
+        <TextInput
+          placeholder="Client / Firm name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
       </Field>
+
       <Field label="Client type">
         <Select value={type} onChange={setType} options={M.CLIENT_TYPES} />
       </Field>
+
       <Field
         label="KYC entity type"
         required
@@ -165,39 +218,70 @@ export function AddClientModal({
           placeholder="Choose an entity type"
         />
       </Field>
-      <Field label="PAN" helper="Optional. e.g. ABCDE1234F">
-        <TextInput
-          placeholder="ABCDE1234F"
-          value={pan}
-          onChange={(e) => setPan(e.target.value)}
-        />
-      </Field>
-      <Field
-        label="GSTIN"
-        helper="Optional. 15 characters, e.g. 27ABCDE1234F1Z5"
-      >
-        <TextInput
-          placeholder="27ABCDE1234F1Z5"
-          value={gstin}
-          onChange={(e) => setGstin(e.target.value)}
-        />
-      </Field>
-      <Field label="Email">
-        <TextInput
-          placeholder="client@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </Field>
-      <Field label="Phone" helper="Used for the WhatsApp document link">
-        <TextInput
-          placeholder="98765 43210"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
-      </Field>
+
+      {/* PAN & GSTIN 2-column side-by-side grid */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="PAN" helper="Optional, e.g. ABCDE1234F">
+          <TextInput
+            placeholder="ABCDE1234F"
+            value={pan}
+            onChange={(e) => setPan(e.target.value.toUpperCase())}
+            className="font-mono uppercase text-[13px]"
+          />
+        </Field>
+        <div>
+          <Field
+            label="GSTIN"
+            helper={!gstinWarning ? "Optional, e.g. 27ABCDE1234F1Z5" : undefined}
+          >
+            <TextInput
+              placeholder="27ABCDE1234F1Z5"
+              value={gstin}
+              onChange={(e) => {
+                const val = e.target.value.toUpperCase();
+                setGstin(val);
+                // If PAN is empty and valid GSTIN length >= 12, auto-suggest PAN
+                if (!pan && val.length >= 12) {
+                  const subPan = val.substring(2, 12);
+                  if (/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(subPan)) {
+                    setPan(subPan);
+                  }
+                }
+              }}
+              className="font-mono uppercase text-[13px]"
+            />
+          </Field>
+          {gstinWarning ? (
+            <p className="mt-1 text-[11px] font-medium text-amber-500 leading-tight">
+              {gstinWarning}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Email & Phone 2-column side-by-side grid */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="Email">
+          <TextInput
+            type="email"
+            placeholder="client@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </Field>
+        <Field label="Phone" helper="Used for the WhatsApp document link">
+          <TextInput
+            type="tel"
+            placeholder="98765 43210"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </Field>
+      </div>
+
+      {/* Services Checkboxes */}
       <div>
-        <p className="mb-1.5 text-[13px] font-medium text-foreground">Services</p>
+        <p className="mb-2 text-[13px] font-medium text-foreground">Services</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {M.SERVICES.map((s) => (
             <CheckboxCard
@@ -213,11 +297,50 @@ export function AddClientModal({
           ))}
         </div>
       </div>
+
+      {/* Dynamic Condition: ITR Audit case */}
+      {services.includes("ITR") ? (
+        <div className="rounded border border-border/80 bg-surface-2/40 p-3 transition-all animate-in fade-in duration-150">
+          <label className="flex items-center gap-2.5 cursor-pointer select-none text-[13px] font-medium text-foreground">
+            <input
+              type="checkbox"
+              checked={isAuditCase}
+              onChange={(e) => setIsAuditCase(e.target.checked)}
+              className="size-4 rounded border-border accent-foreground cursor-pointer"
+            />
+            <span>Audit case</span>
+          </label>
+          <p className="mt-1 text-[11px] text-muted-foreground ml-6">
+            ITR due 31 October instead of 31 July
+          </p>
+        </div>
+      ) : null}
+
+      {/* Dynamic Condition: ROC AGM Date */}
+      {services.includes("ROC") ? (
+        <div className="transition-all animate-in fade-in duration-150">
+          <Field
+            label="AGM date"
+            helper="ROC annual return is due within 60 days of the AGM"
+          >
+            <TextInput
+              type="date"
+              value={agmDate}
+              onChange={(e) => setAgmDate(e.target.value)}
+              className="[color-scheme:dark]"
+            />
+          </Field>
+        </div>
+      ) : null}
+
+      {/* Notes Field */}
       <Field label="Notes">
         <TextArea
+          rows={4}
           placeholder="Anything worth remembering"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
+          className="min-h-[110px] resize-y font-mono text-[13px] leading-relaxed uppercase"
         />
       </Field>
     </Modal>

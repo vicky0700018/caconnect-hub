@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -82,11 +82,11 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               }}
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-[13.5px] transition-colors ${
                 active
-                  ? "bg-[#232a3b] font-medium text-white shadow-xs"
-                  : "text-[#9ca3af] hover:bg-[#181d29] hover:text-[#f3f4f6]"
+                  ? "bg-accent font-medium text-foreground shadow-xs"
+                  : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
               }`}
             >
-              <Icon className={`size-4.5 shrink-0 ${active ? "text-white" : "text-[#9ca3af]"}`} />
+              <Icon className={`size-4.5 shrink-0 ${active ? "text-foreground" : "text-muted-foreground"}`} />
               <span>{item.name}</span>
             </button>
           );
@@ -101,6 +101,42 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function Header({ onMenu, onLogout }: { onMenu: () => void; onLogout?: () => void }) {
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("caconnect_theme") as "dark" | "light" | null;
+      if (saved === "light") {
+        setTheme("light");
+        document.documentElement.classList.add("light");
+        document.documentElement.setAttribute("data-theme", "light");
+      } else {
+        setTheme("dark");
+        document.documentElement.classList.remove("light");
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+    } catch {
+      // fallback
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    try {
+      localStorage.setItem("caconnect_theme", next);
+      if (next === "light") {
+        document.documentElement.classList.add("light");
+        document.documentElement.setAttribute("data-theme", "light");
+      } else {
+        document.documentElement.classList.remove("light");
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/95 px-4 backdrop-blur lg:px-8">
       <button
@@ -112,15 +148,24 @@ function Header({ onMenu, onLogout }: { onMenu: () => void; onLogout?: () => voi
       </button>
       <div className="ml-auto flex items-center gap-3">
         <button
-          aria-label="Theme"
-          className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+          type="button"
+          onClick={toggleTheme}
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors inline-flex items-center justify-center cursor-pointer"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19" />
-          </svg>
+          {theme === "dark" ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19" />
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+            </svg>
+          )}
         </button>
-        <span className="grid h-7 w-7 place-items-center rounded-full border border-border bg-surface-2 text-[11px] font-semibold">
+        <span className="grid h-7 w-7 place-items-center rounded-full border border-border bg-surface-2 text-[11px] font-semibold text-foreground">
           ST
         </span>
         <span className="hidden text-[13px] text-foreground sm:inline">Sthambhalliance</span>

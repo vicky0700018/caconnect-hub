@@ -1,8 +1,7 @@
 @import "tailwindcss";
 
 /*
- * CAConnect by Bevritti design system — dark, compact, professional CA practice software.
- * Exact tokens matching bevritti.in
+ * CAConnect Hub Design System — dark, compact, professional CA practice software.
  */
 
 @theme inline {
@@ -69,6 +68,36 @@
   --brand-foreground: oklch(0.16 0.014 265);
 }
 
+html.light,
+[data-theme="light"],
+.light {
+  --background: oklch(0.985 0.002 260);
+  --foreground: oklch(0.15 0.014 265);
+  --surface: oklch(0.96 0.004 260);
+  --surface-2: oklch(0.92 0.006 260);
+  --sidebar: oklch(0.95 0.005 260);
+  --card: oklch(1 0 0);
+  --border: oklch(0.88 0.006 260);
+  --border-strong: oklch(0.75 0.01 260);
+  --rule: oklch(0.90 0.005 260);
+  --muted: oklch(0.93 0.005 260);
+  --muted-foreground: oklch(0.48 0.015 260);
+  --primary: oklch(0.15 0.014 265);
+  --primary-foreground: oklch(0.99 0.002 260);
+  --accent: oklch(0.93 0.006 260);
+  --danger: oklch(0.55 0.22 25);
+  --danger-soft: oklch(0.95 0.03 25);
+  --success: oklch(0.52 0.16 155);
+  --success-soft: oklch(0.94 0.03 155);
+  --info: oklch(0.5 0.15 245);
+  --info-soft: oklch(0.94 0.03 245);
+  --warn: oklch(0.65 0.16 65);
+  --warn-soft: oklch(0.95 0.04 65);
+  --ring: oklch(0.45 0.02 260);
+  --brand: oklch(0.70 0.16 68);
+  --brand-foreground: oklch(0.99 0.002 260);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
@@ -76,6 +105,10 @@
 
   html {
     color-scheme: dark;
+  }
+
+  html.light {
+    color-scheme: light;
   }
 
   body {
@@ -89,6 +122,12 @@
   select,
   textarea {
     color-scheme: dark;
+  }
+
+  html.light input,
+  html.light select,
+  html.light textarea {
+    color-scheme: light;
   }
 }
 
@@ -117,12 +156,14 @@
   background-color: var(--color-surface-2);
   border: 1px solid var(--color-border);
   border-radius: 0.375rem;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.875rem;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.84rem;
   color: var(--color-foreground);
+  color-scheme: dark;
 }
 .field-input::placeholder {
   color: var(--color-muted-foreground);
+  opacity: 0.7;
 }
 .field-input:focus {
   outline: none;
@@ -198,4 +239,20 @@
 
 .marketing-enter {
   animation: fadeIn 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Sleek Dark Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }

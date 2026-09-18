@@ -39,12 +39,13 @@ export default function Audits() {
         year: fy,
         done: 0,
         total: type === "GST" ? 15 : 24,
-        assigned: "Senior Associate",
-        due: "30 Sept",
+        assigned: "—",
+        due: "—",
         status: "Planning",
       });
       toast(`${type} audit opened for ${client}.`);
       setClient("");
+      setType("");
     } catch (err) {
       console.error(err);
       toast("Failed to open audit engagement", "error");
@@ -106,33 +107,21 @@ export default function Audits() {
                 <Th>Assigned</Th>
                 <Th>Due</Th>
                 <Th>Status</Th>
-                <Th className="text-right">Action</Th>
               </tr>
             </thead>
             <tbody>
               {audits.map((a) => (
-                <tr key={a.id}>
+                <tr key={a.id} className="border-b border-border/70 hover:bg-surface-2/40 transition-colors">
                   <Td className="font-medium text-foreground">{a.client}</Td>
                   <Td className="text-muted-foreground">{a.audit}</Td>
                   <Td className="text-muted-foreground">{a.year}</Td>
                   <Td>
                     <ProgressBar value={a.done} total={a.total} />
                   </Td>
-                  <Td className="text-muted-foreground">{a.assigned}</Td>
-                  <Td className="text-muted-foreground">{a.due}</Td>
+                  <Td className="text-muted-foreground">{a.assigned || "—"}</Td>
+                  <Td className="text-muted-foreground">{a.due || "—"}</Td>
                   <Td>
-                    <Badge>{a.status}</Badge>
-                  </Td>
-                  <Td className="text-right">
-                    <Button
-                      size="sm"
-                      onClick={async () => {
-                        await updateAuditProgressAsync(a.id);
-                        toast("Checklist item signed off.");
-                      }}
-                    >
-                      Sign off step
-                    </Button>
+                    <Badge>{a.status || "Planning"}</Badge>
                   </Td>
                 </tr>
               ))}

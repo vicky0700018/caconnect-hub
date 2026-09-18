@@ -249,7 +249,11 @@ export function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
 
 export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
-    <textarea rows={3} {...props} className={`field-input ${props.className ?? ""}`} />
+    <textarea
+      rows={4}
+      {...props}
+      className={`field-input min-h-[100px] resize-y leading-relaxed ${props.className ?? ""}`}
+    />
   );
 }
 
@@ -528,6 +532,7 @@ export function Modal({
   description,
   children,
   footer,
+  maxWidth = "max-w-lg",
 }: {
   open: boolean;
   onClose: () => void;
@@ -535,6 +540,7 @@ export function Modal({
   description?: string;
   children: ReactNode;
   footer?: ReactNode;
+  maxWidth?: string;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -545,9 +551,9 @@ export function Modal({
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 sm:items-center">
-      <div className="w-full max-w-lg rounded border border-border bg-surface shadow-2xl">
-        <div className="flex items-start justify-between gap-4 border-b border-border px-4 py-3">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/75 backdrop-blur-xs p-4 sm:items-center">
+      <div className={`w-full ${maxWidth} rounded-lg border border-border bg-surface shadow-2xl overflow-hidden`}>
+        <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-3.5">
           <div>
             <h2 className="font-serif text-lg text-foreground">{title}</h2>
             {description ? (
@@ -557,14 +563,14 @@ export function Modal({
           <button
             aria-label="Close"
             onClick={onClose}
-            className="rounded px-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="rounded p-1 text-muted-foreground hover:bg-surface-2 hover:text-foreground transition-colors"
           >
             ✕
           </button>
         </div>
-        <div className="max-h-[65vh] space-y-4 overflow-y-auto px-4 py-4">{children}</div>
+        <div className="max-h-[78vh] space-y-4 overflow-y-auto px-5 py-4">{children}</div>
         {footer ? (
-          <div className="flex justify-end gap-2 border-t border-border px-4 py-3">
+          <div className="flex justify-end gap-2 border-t border-border px-5 py-3 bg-surface/50">
             {footer}
           </div>
         ) : null}
@@ -597,15 +603,18 @@ export function Toasts() {
 }
 
 export function ProgressBar({ value, total }: { value: number; total: number }) {
-  const pct = total ? Math.round((value / total) * 100) : 0;
+  const pct = total ? Math.min(100, Math.round((value / total) * 100)) : 0;
   return (
-    <div className="flex items-center gap-2">
-      <div className="h-1.5 w-24 overflow-hidden rounded-sm bg-muted">
-        <div className="h-full bg-foreground" style={{ width: `${pct}%` }} />
+    <div className="w-24">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#242938]">
+        <div
+          className="h-full rounded-full bg-[#d97706] transition-all duration-300"
+          style={{ width: `${pct}%` }}
+        />
       </div>
-      <span className="text-[12px] text-muted-foreground">
+      <p className="mt-1 text-[11px] text-muted-foreground whitespace-nowrap">
         {value}/{total} done
-      </span>
+      </p>
     </div>
   );
 }

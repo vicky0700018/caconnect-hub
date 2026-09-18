@@ -81,29 +81,27 @@ export function PublicHeader({ activeNav }: { activeNav?: string }) {
             Pricing
           </Link>
 
-          <span className="mx-2 h-4 w-px bg-rule" aria-hidden="true" />
-
-          <button
-            onClick={() => router.push("/login")}
+          <Link
+            href="/login"
             className="inline-flex h-7 items-center justify-center gap-1 rounded-md px-2.5 text-[0.8rem] font-medium text-foreground transition-colors hover:bg-muted/50"
           >
             Log in
-          </button>
-          <button
-            onClick={() => router.push("/login")}
+          </Link>
+          <Link
+            href="/login"
             className="inline-flex h-7 items-center justify-center gap-1 rounded-md bg-[#d97706] hover:bg-[#b45309] text-white px-3 text-[0.8rem] font-medium transition-all"
           >
             Start free
-          </button>
+          </Link>
         </nav>
 
         <div className="flex items-center gap-2 sm:hidden">
-          <button
-            onClick={() => router.push("/login")}
+          <Link
+            href="/login"
             className="inline-flex h-7 items-center justify-center rounded-md bg-[#d97706] hover:bg-[#b45309] px-2.5 text-[0.8rem] font-medium text-white"
           >
             Start free
-          </button>
+          </Link>
           <button
             type="button"
             onClick={() => setMobileMenu((m) => !m)}

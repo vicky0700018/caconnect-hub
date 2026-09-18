@@ -49,8 +49,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${ibmPlexSans.variable} ${sourceSerif4.variable}`}>
-      <body className="min-h-screen bg-background text-foreground antialiased selection:bg-brand selection:text-brand-foreground">
+    <html lang="en" suppressHydrationWarning className={`${ibmPlexSans.variable} ${sourceSerif4.variable}`}>
+      <body suppressHydrationWarning className="min-h-screen bg-background text-foreground antialiased selection:bg-brand selection:text-brand-foreground">
         {children}
       </body>
     </html>

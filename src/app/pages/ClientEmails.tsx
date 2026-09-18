@@ -1,23 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Send, Trash2, CheckCircle2, FileEdit } from "lucide-react";
+import { Mail, Send, Trash2, CheckCircle2, Sparkles } from "lucide-react";
 import { useStore } from "../store";
-import { Button, Card, EmptyState, PageHeader, Tabs } from "../ui";
+import { Button, Card, PageHeader } from "../ui";
+
+function formatEmailDate(dateStr?: string) {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      const formattedDate = d.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      const formattedTime = d.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }).toLowerCase();
+      return `${formattedDate}, ${formattedTime}`;
+    }
+  } catch (e) {
+    // fallback
+  }
+  return dateStr;
+}
 
 export default function ClientEmails() {
   const { emails, removeEmailAsync, sendEmailAsync, setPage, toast } = useStore();
-  const [tab, setTab] = useState("All");
   const [sendingId, setSendingId] = useState<string | null>(null);
-
-  const sentCount = emails.filter((e: any) => e.status === "Sent").length;
-  const draftCount = emails.filter((e: any) => e.status !== "Sent").length;
-
-  const filtered = tab === "All" 
-    ? emails 
-    : tab === "Sent" 
-      ? emails.filter((e: any) => e.status === "Sent")
-      : emails.filter((e: any) => e.status !== "Sent");
 
   const handleDelete = async (id: string) => {
     await removeEmailAsync(id);
@@ -48,43 +61,32 @@ export default function ClientEmails() {
     <>
       <PageHeader
         title="Client Emails"
-        subtitle="AI-drafted updates, document requests, and notifications sent to your clients."
+        subtitle="AI-drafted updates and reminders for your clients."
         actions={
           <Button variant="primary" onClick={() => setPage("Draft a client email")}>
-            <Mail className="size-4 mr-1.5 inline" />
-            + Draft new email
+            <Sparkles className="size-3.5 mr-1.5 inline" />
+            Draft an email
           </Button>
         }
       />
 
-      <Tabs
-        tabs={[`All (${emails.length})`, `Sent (${sentCount})`, `Drafts (${draftCount})`]}
-        active={
-          tab === "All"
-            ? `All (${emails.length})`
-            : tab === "Sent"
-              ? `Sent (${sentCount})`
-              : `Drafts (${draftCount})`
-        }
-        onChange={(t) =>
-          setTab(t.startsWith("All") ? "All" : t.startsWith("Sent") ? "Sent" : "Drafts")
-        }
-      />
-
       <Card className="mt-4">
-        {filtered.length === 0 ? (
-          <EmptyState
-            title={tab === "All" ? "No client emails yet" : `No ${tab.toLowerCase()} emails`}
-            hint="Pick a client and a topic, and let AI draft the note for you."
-            action={
-              <Button variant="primary" onClick={() => setPage("Draft a client email")}>
-                + Draft an email
-              </Button>
-            }
-          />
+        {emails.length === 0 ? (
+          <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
+            <div className="size-12 rounded-full bg-surface-2 border border-border/80 flex items-center justify-center text-muted-foreground mb-3.5">
+              <Mail className="size-5" />
+            </div>
+            <p className="text-sm font-semibold text-foreground">No client emails yet</p>
+            <p className="mt-1 max-w-sm text-[13px] text-muted-foreground mb-5">
+              Pick a client and a topic, and let AI draft the note for you.
+            </p>
+            <Button variant="primary" onClick={() => setPage("Draft a client email")}>
+              Draft an email
+            </Button>
+          </div>
         ) : (
           <div className="divide-y divide-border">
-            {filtered.map((e: any) => {
+            {emails.map((e: any) => {
               const isSent = e.status === "Sent";
               const isSending = sendingId === e.id;
 
@@ -104,7 +106,9 @@ export default function ClientEmails() {
                         </span>
                       )}
                     </div>
-                    <span className="text-[12px] text-muted-foreground">{e.createdAt || e.sentAt}</span>
+                    <span className="text-[12px] text-muted-foreground">
+                      {formatEmailDate(e.createdAt || e.sentAt)}
+                    </span>
                   </div>
 
                   <p className="text-[12px] text-muted-foreground">

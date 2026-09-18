@@ -23,6 +23,8 @@ export async function GET(request: Request) {
         email: c.email,
         phone: c.phone,
         services: c.services || [],
+        isAuditCase: !!c.isAuditCase,
+        agmDate: c.agmDate || "",
         notes: c.notes || "",
       })),
     });
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { name, type, kycEntityType, pan, gstin, email, phone, services, notes } = body;
+    const { name, type, kycEntityType, pan, gstin, email, phone, services, isAuditCase, agmDate, notes } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "Client name is required" }, { status: 400 });
@@ -57,6 +59,8 @@ export async function POST(request: Request) {
       email: (email || "").trim(),
       phone: (phone || "").trim(),
       services: Array.isArray(services) ? services : [],
+      isAuditCase: !!isAuditCase,
+      agmDate: agmDate || "",
       notes: notes || "",
       createdAt: new Date().toISOString(),
     };
@@ -84,7 +88,7 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { id, name, type, kycEntityType, pan, gstin, email, phone, services, notes } = body;
+    const { id, name, type, kycEntityType, pan, gstin, email, phone, services, isAuditCase, agmDate, notes } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Client id is required" }, { status: 400 });
@@ -109,6 +113,8 @@ export async function PATCH(request: Request) {
     if (email !== undefined) updateDoc.email = (email || "").trim();
     if (phone !== undefined) updateDoc.phone = (phone || "").trim();
     if (services !== undefined) updateDoc.services = Array.isArray(services) ? services : [];
+    if (isAuditCase !== undefined) updateDoc.isAuditCase = !!isAuditCase;
+    if (agmDate !== undefined) updateDoc.agmDate = agmDate;
     if (notes !== undefined) updateDoc.notes = notes;
     updateDoc.updatedAt = new Date().toISOString();
 

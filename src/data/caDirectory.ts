@@ -25,6 +25,46 @@ export interface CAProfile {
 
 export const CA_PRACTICES: CAProfile[] = [
   {
+    slug: "sthambhalliance-new-delhi",
+    name: "Sthambhalliance",
+    tagline: "Statutory audit, tax compliance and corporate advisory services",
+    city: "New Delhi",
+    state: "Delhi",
+    location: "New Delhi, Delhi",
+    experience: "10 years",
+    icaiNumber: "ICAI 123456",
+    languages: "English, Hindi",
+    rating: 5.0,
+    reviewCount: 1,
+    specialities: ["ITR", "GSTR-1", "GSTR-3B", "TDS", "ROC", "Company Registration"],
+    startingPrice: "₹2,500",
+    about:
+      "A dedicated chartered accountancy practice providing end-to-end GST compliance, income tax filings, corporate law matters and auditing for businesses and professionals.",
+    packages: [
+      {
+        id: "pkg-1",
+        name: "Private Limited Company Registration",
+        description:
+          "Incorporation end to end — name approval, DIN and DSC for two directors, MOA/AOA drafting and filing.",
+        price: "₹15,000",
+      },
+      {
+        id: "pkg-2",
+        name: "ITR filing — salaried or freelancer",
+        description:
+          "Return preparation and filing, including capital gains and foreign income schedules where they apply.",
+        price: "₹2,500",
+      },
+      {
+        id: "pkg-3",
+        name: "GST monthly compliance",
+        description:
+          "GSTR-1 and GSTR-3B every month, reconciliation, and we chase you for the registers so you do not have to remember.",
+        price: "₹5,000",
+      },
+    ],
+  },
+  {
     slug: "deshpande-associates-pune",
     name: "Deshpande & Associates",
     tagline: "GST, ITR and company compliance for Pune small businesses",

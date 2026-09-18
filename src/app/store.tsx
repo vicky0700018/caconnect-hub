@@ -70,7 +70,7 @@ function useStoreValue() {
   const [recons, setRecons] = useState<M.Recon[]>([]);
   const [emails, setEmails] = useState<M.EmailDraft[]>([]);
   const [team, setTeam] = useState<any[]>([]);
-  const [invitations, setInvitations] = useState<any[]>([]);
+  const [invitations, setInvitations] = useState<any[]>(M.invitations);
   const [bookings, setBookings] = useState<M.Booking[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
 

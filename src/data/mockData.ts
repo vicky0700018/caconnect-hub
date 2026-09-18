@@ -8,6 +8,8 @@ export type Client = {
   email?: string;
   phone?: string;
   services: string[];
+  isAuditCase?: boolean;
+  agmDate?: string;
   notes?: string;
 };
 
@@ -124,6 +126,26 @@ export type Booking = {
   platformFee: number;
   message?: string;
   status: "requested" | "accepted" | "declined" | "completed";
+};
+
+export type Package = {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+  turnaround: string;
+  includes?: string[];
+  hidden?: boolean;
+};
+
+export type Review = {
+  id: string;
+  author: string;
+  rating: number;
+  date: string;
+  title?: string;
+  text: string;
 };
 
 export const CLIENT_TYPES = [
@@ -863,48 +885,55 @@ export const bookings: Booking[] = [
   },
 ];
 
-export const packages = [
+export const packages: Package[] = [
   {
     id: "p1",
-    name: "ITR filing — salaried or freelancer",
-    price: 2500,
-    turnaround: "3 working days",
-    includes: ["Computation review", "Return filing", "Post-filing query support"],
+    name: "Private Limited Company Registration",
+    category: "Company Registration",
+    description: "Incorporation end to end — name approval, DIN and DSC for two directors, MOA/AOA drafting and filing.",
+    price: 15000,
+    turnaround: "Usually 12 days",
+    includes: ["Name approval", "SPICe+ filing", "MOA/AOA drafting", "PAN, TAN & DSC"],
   },
   {
     id: "p2",
-    name: "GST monthly compliance",
-    price: 5000,
-    turnaround: "Monthly retainer",
-    includes: ["GSTR-1 & 3B filing", "GSTR-2B reconciliation", "ITC advisory"],
+    name: "ITR filing — salaried or freelancer",
+    category: "ITR",
+    description: "Return preparation and filing, including capital gains and foreign income schedules where they apply.",
+    price: 2500,
+    turnaround: "Usually 4 days",
+    includes: ["Computation review", "Return filing", "Post-filing query support"],
   },
   {
     id: "p3",
-    name: "Company incorporation",
-    price: 15000,
-    turnaround: "10-15 working days",
-    includes: ["Name approval", "SPICe+ filing", "PAN, TAN and DSC coordination"],
+    name: "GST monthly compliance",
+    category: "GSTR-3B",
+    description: "GSTR-1 and GSTR-3B every month, reconciliation, and we chase you for the registers so you do not have to remember.",
+    price: 5000,
+    turnaround: "Usually 30 days",
+    includes: ["GSTR-1 & 3B filing", "GSTR-2B reconciliation", "ITC advisory"],
   },
 ];
 
-export const reviews = [
+export const reviews: Review[] = [
   {
     id: "rv1",
-    author: "Sneha Kulkarni",
+    author: "Arjun Mehta",
     rating: 5,
-    date: "10 Sept 2026",
-    text: "Took over our GST filings mid-year and sorted out two months of mismatched ITC without any fuss. Replies are quick and always in plain language.",
+    date: "05 Sept 2026",
+    title: "Company registered in twelve days, exactly as quoted",
+    text: "Quoted 15,000 upfront and that is what I paid — no surprise additions at the end. Explained every form before I signed it and chased the MCA when approval was slow. I have already sent two other founders to them.",
   },
 ];
 
 export const team = [
-  { id: "tm1", name: "Santosh Kumar", role: "Owner", joined: "05 Sept 2026" },
+  { id: "tm1", name: "Santosh Kumar", email: "santosh@caconnect.in", role: "Owner", joined: "05 Sept 2026" },
 ];
 
 export const invitations = [
-  { id: "iv1", email: "articled.assistant@example.com", role: "Staff", expires: "20 Sept 2026" },
-  { id: "iv2", email: "audit.manager@example.com", role: "Manager", expires: "22 Sept 2026" },
-  { id: "iv3", email: "front.desk@example.com", role: "Staff", expires: "25 Sept 2026" },
+  { id: "iv1", email: "shashantshekhar10@gmail.com", role: "Staff", expires: "28 Sept 2026" },
+  { id: "iv2", email: "santoshbe2024@gmail.com", role: "Staff", expires: "19 Sept 2026" },
+  { id: "iv3", email: "team@caconnect.in", role: "Staff", expires: "19 Sept 2026" },
 ];
 
 export const ROLES = ["Owner", "Manager", "Staff", "Read only"];

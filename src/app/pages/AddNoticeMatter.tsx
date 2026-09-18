@@ -34,15 +34,20 @@ export default function AddNoticeMatter() {
     setError("");
     setSubmitting(true);
     try {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase();
+      const dateStr = new Date(noticeDate).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      const formattedDrafted = `${dateStr}, ${timeStr}`;
+
       await addNoticeAsync({
         title: title.trim(),
         noticeType: type,
         client,
-        drafted: new Date(noticeDate).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }),
+        drafted: formattedDrafted,
         status: "Received",
         amount: Number(amount.replace(/[, ]/g, "")) || 0,
         notes: note,
