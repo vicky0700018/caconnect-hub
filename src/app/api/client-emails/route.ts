@@ -61,3 +61,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to save email draft" }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  const user = await getAuthUser(request);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "id is required" }, { status: 400 });
+  }
+
+  try {
+    const { ObjectId } = await import("mongodb");
+    const col = await getCollection("client_emails");
+    let query: any = { userId: user.userId };
+    if (ObjectId.isValid(id)) {
+      query = { _id: new ObjectId(id), userId: user.userId };
+    } else {
+      query = { id, userId: user.userId };
+    }
+
+    const res = await col.deleteOne(query);
+    return NextResponse.json({ success: true, deletedCount: res.deletedCount });
+  } catch (error: any) {
+    console.error("Delete client email error:", error);
+    return NextResponse.json({ error: "Failed to delete email" }, { status: 500 });
+  }
+}

@@ -59,6 +59,7 @@ function useStoreValue() {
   const [clients, setClients] = useState<M.Client[]>([]);
   const [deadlines, setDeadlines] = useState<M.Deadline[]>([]);
   const [docRequests, setDocRequests] = useState<M.DocRequest[]>([]);
+  const [files, setFiles] = useState<any[]>([]);
   const [fees, setFees] = useState<M.Fee[]>([]);
   const [tdsReturns, setTdsReturns] = useState<M.TdsReturn[]>([]);
   const [audits, setAudits] = useState<M.Audit[]>([]);
@@ -87,6 +88,7 @@ function useStoreValue() {
         clientsRes,
         deadlinesRes,
         docsRes,
+        filesRes,
         feesRes,
         tdsRes,
         auditsRes,
@@ -101,6 +103,7 @@ function useStoreValue() {
         fetch("/api/clients").then((r) => (r.ok ? r.json() : null)),
         fetch("/api/deadlines").then((r) => (r.ok ? r.json() : null)),
         fetch("/api/documents").then((r) => (r.ok ? r.json() : null)),
+        fetch("/api/files").then((r) => (r.ok ? r.json() : null)),
         fetch("/api/fees").then((r) => (r.ok ? r.json() : null)),
         fetch("/api/tds-returns").then((r) => (r.ok ? r.json() : null)),
         fetch("/api/audits").then((r) => (r.ok ? r.json() : null)),
@@ -121,6 +124,9 @@ function useStoreValue() {
       }
       if (docsRes.status === "fulfilled" && docsRes.value?.docRequests) {
         setDocRequests(docsRes.value.docRequests);
+      }
+      if (filesRes.status === "fulfilled" && filesRes.value?.files) {
+        setFiles(filesRes.value.files);
       }
       if (feesRes.status === "fulfilled" && feesRes.value?.fees) {
         setFees(feesRes.value.fees);
@@ -265,6 +271,53 @@ function useStoreValue() {
       await fetch(`/api/documents?id=${encodeURIComponent(id)}`, { method: "DELETE" });
     } catch (e) {
       console.error("Failed to delete document request:", e);
+    }
+  };
+
+  const uploadToCloudinaryAsync = async (file: File, folder = "caconnect_uploads") => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", folder);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload file to Cloudinary");
+      }
+      return data;
+    } catch (e) {
+      console.error("Cloudinary upload failed:", e);
+      throw e;
+    }
+  };
+
+  const addFileAsync = async (fileData: any) => {
+    try {
+      const res = await fetch("/api/files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fileData),
+      });
+      const data = await res.json();
+      if (data.file) {
+        setFiles((fs) => [data.file, ...fs]);
+        return data.file;
+      }
+    } catch (e) {
+      console.error("Failed to add file record:", e);
+    }
+  };
+
+  const removeFileAsync = async (id: string) => {
+    try {
+      setFiles((fs) => fs.filter((f) => f.id !== id));
+      await fetch(`/api/files?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch (e) {
+      console.error("Failed to delete file:", e);
     }
   };
 
@@ -489,6 +542,36 @@ function useStoreValue() {
     }
   };
 
+  const sendEmailAsync = async (emailData: any) => {
+    try {
+      const res = await fetch("/api/client-emails/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailData),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send email");
+      }
+      if (data.email) {
+        setEmails((es) => [data.email, ...es.filter((x) => x.id !== data.email.id)]);
+        return data.email;
+      }
+    } catch (e: any) {
+      console.error("Failed to send email:", e);
+      throw e;
+    }
+  };
+
+  const removeEmailAsync = async (id: string) => {
+    try {
+      setEmails((es) => es.filter((x) => x.id !== id));
+      await fetch(`/api/client-emails?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch (e) {
+      console.error("Failed to delete email:", e);
+    }
+  };
+
   const saveGstReconAsync = async (reconData: any) => {
     try {
       const res = await fetch("/api/gst", {
@@ -575,6 +658,8 @@ function useStoreValue() {
     setDeadlines,
     docRequests,
     setDocRequests,
+    files,
+    setFiles,
     fees,
     setFees,
     tdsReturns,
@@ -611,6 +696,9 @@ function useStoreValue() {
     removeDeadlineAsync,
     addDocRequestAsync,
     removeDocRequestAsync,
+    uploadToCloudinaryAsync,
+    addFileAsync,
+    removeFileAsync,
     addFeeAsync,
     updateFeeAsync,
     updateFeeStatusAsync,
@@ -626,6 +714,8 @@ function useStoreValue() {
     importDemandsAsync,
     addEstimateAsync,
     saveEmailDraftAsync,
+    sendEmailAsync,
+    removeEmailAsync,
     saveGstReconAsync,
     addTeamMemberAsync,
     removeTeamMemberAsync,

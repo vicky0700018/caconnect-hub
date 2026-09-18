@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, MessageCircle, Copy, Check } from "lucide-react";
+import { X, MessageCircle, Copy, Check, Mail, UploadCloud, FileText } from "lucide-react";
 import * as M from "@/data/mockData";
 import { nextId, useStore } from "./store";
 import {
@@ -765,9 +765,10 @@ export function ShareDocModal({
   onClose: () => void;
   request: M.DocRequest | null;
 }) {
-  const { toast } = useStore();
+  const { clients, toast } = useStore();
   const [copied, setCopied] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   if (!open || !request) return null;
 
@@ -792,6 +793,40 @@ export function ShareDocModal({
     window.open(waUrl, "_blank");
   };
 
+  const handleSendEmail = async () => {
+    const clientDoc = clients.find((c) => c.name === request.client);
+    const clientEmail = clientDoc?.email;
+    if (!clientEmail) {
+      toast(`No email address found for ${request.client}. Please check Client profile.`, "error");
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      const res = await fetch("/api/client-emails/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client: request.client,
+          to: clientEmail,
+          topic: "Document request follow-up",
+          subject: `Document upload request: ${request.title} — Sthambhalliance`,
+          body: `Dear ${request.client},\n\nPlease find your secure document upload link below for ${request.title}:\n\n${uploadUrl}\n\nYou can open this link directly from your mobile or PC without logging in to upload your files.\n\nWarm regards,\nSthambhalliance Chartered Accountants`,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send email");
+      }
+      toast(`Upload link sent to ${clientEmail} successfully!`);
+    } catch (err: any) {
+      console.error(err);
+      toast(err?.message || "Failed to send email via SMTP", "error");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <div className="product-frame w-full max-w-lg bg-[#141721] border border-[#232736] p-6 rounded-lg shadow-2xl animate-in fade-in zoom-in-95 duration-150">
@@ -813,15 +848,24 @@ export function ShareDocModal({
           </button>
         </div>
 
-        {/* WhatsApp Button */}
-        <div className="mt-5">
+        {/* Action Buttons: WhatsApp & Email */}
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
           <button
             type="button"
             onClick={handleWhatsApp}
-            className="w-full flex items-center justify-center gap-2 rounded bg-[#f4f4ee] hover:bg-white text-[#12141d] font-medium py-2.5 text-xs transition-colors shadow-sm"
+            className="flex items-center justify-center gap-2 rounded bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] border border-[#25D366]/40 font-medium py-2.5 text-xs transition-colors shadow-sm"
           >
             <MessageCircle className="size-4 fill-current" />
-            Send on WhatsApp
+            WhatsApp
+          </button>
+          <button
+            type="button"
+            onClick={handleSendEmail}
+            disabled={sendingEmail}
+            className="flex items-center justify-center gap-2 rounded bg-[#3b82f6]/20 hover:bg-[#3b82f6]/30 text-[#60a5fa] border border-[#3b82f6]/40 font-medium py-2.5 text-xs transition-colors shadow-sm disabled:opacity-50"
+          >
+            <Mail className="size-4" />
+            {sendingEmail ? "Sending..." : "Send Email"}
           </button>
         </div>
 
@@ -877,4 +921,175 @@ export function ShareDocModal({
     </div>
   );
 }
+
+/* ---------------- Direct File Upload Modal (Cloudinary) ---------------- */
+
+export function UploadFileModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+  initialClient?: string;
+}) {
+  const { clients, clientNames, uploadToCloudinaryAsync, addFileAsync, toast } = useStore();
+  const [client, setClient] = useState("");
+  const [requestName, setRequestName] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setClient("");
+      setRequestName("");
+      setFile(null);
+      setPreview(null);
+      setError("");
+    }
+  }, [open]);
+
+  const handleFileChange = (selected: File | null) => {
+    setFile(selected);
+    if (selected && selected.type.startsWith("image/")) {
+      const url = URL.createObjectURL(selected);
+      setPreview(url);
+    } else {
+      setPreview(null);
+    }
+  };
+
+  const submit = async () => {
+    if (!file) {
+      setError("Please select a file or image to upload.");
+      return;
+    }
+    setError("");
+    setUploading(true);
+
+    try {
+      // Upload to Cloudinary
+      const uploaded = await uploadToCloudinaryAsync(file, "caconnect_direct_uploads");
+
+      // Save file record in MongoDB with Cloudinary URL
+      await addFileAsync({
+        name: file.name,
+        client: client.trim() || "General",
+        request: requestName.trim() || "Direct Upload",
+        url: uploaded.url,
+        publicId: uploaded.publicId,
+        format: uploaded.format,
+        bytes: uploaded.bytes,
+      });
+
+      toast(`File "${file.name}" uploaded to Cloudinary successfully!`);
+      onClose();
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || "Failed to upload file to Cloudinary.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Upload document to Cloudinary"
+      description="Files and images are stored securely on Cloudinary and attached to client records."
+      footer={
+        <>
+          <Button onClick={onClose} disabled={uploading}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={submit} disabled={uploading}>
+            {uploading ? (
+              <span className="flex items-center gap-2">
+                <div className="size-3.5 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin" />
+                Uploading to Cloudinary...
+              </span>
+            ) : (
+              "Upload to Cloudinary"
+            )}
+          </Button>
+        </>
+      }
+    >
+      {error ? (
+        <div className="rounded border border-danger/50 bg-danger-soft px-3 py-2 text-[13px] text-danger">
+          {error}
+        </div>
+      ) : null}
+
+      <Field label="Client (optional)">
+        <Select
+          value={client}
+          onChange={setClient}
+          options={clientNames}
+          placeholder="Select client or leave empty for general"
+        />
+      </Field>
+
+      <Field label="Document name / category">
+        <TextInput
+          placeholder="e.g. PAN Card, Balance Sheet 2026, GST Return"
+          value={requestName}
+          onChange={(e) => setRequestName(e.target.value)}
+        />
+      </Field>
+
+      <div>
+        <label className="block text-[13px] font-medium text-foreground mb-1.5">
+          Select file or image <span className="text-danger">*</span>
+        </label>
+        <div className="border-2 border-dashed border-border hover:border-border-strong rounded-xl p-6 text-center bg-surface-2/30 transition-colors">
+          <input
+            type="file"
+            id="modal-file-picker"
+            className="hidden"
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.zip"
+            onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
+          />
+          <label
+            htmlFor="modal-file-picker"
+            className="cursor-pointer flex flex-col items-center justify-center gap-2"
+          >
+            <div className="size-10 rounded-full bg-surface-2 flex items-center justify-center text-muted-foreground border border-border">
+              <UploadCloud className="size-5" />
+            </div>
+            {file ? (
+              <div>
+                <p className="text-sm font-medium text-foreground">{file.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {(file.size / 1024).toFixed(1)} KB · Click to change file
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-sm font-medium text-foreground">Click to browse file or image</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Supports Images (PNG, JPG, WebP), PDFs, Excel, CSV, Docs
+                </p>
+              </div>
+            )}
+          </label>
+        </div>
+
+        {/* Thumbnail Preview if Image */}
+        {preview && (
+          <div className="mt-3 flex items-center gap-3 bg-surface p-2.5 rounded-lg border border-border">
+            <img src={preview} alt="Preview" className="size-12 object-cover rounded border border-border" />
+            <div className="text-xs">
+              <p className="font-medium text-foreground">Image Preview</p>
+              <p className="text-muted-foreground">Will be uploaded to Cloudinary</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
 

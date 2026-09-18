@@ -48,13 +48,25 @@ const template = (client: string, topic: string, notes: string) => {
 };
 
 export default function DraftEmail() {
-  const { clientNames, saveEmailDraftAsync, setPage, toast } = useStore();
+  const { clients, clientNames, saveEmailDraftAsync, sendEmailAsync, setPage, toast } = useStore();
   const [client, setClient] = useState("");
+  const [toEmail, setToEmail] = useState("");
   const [topic, setTopic] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [draft, setDraft] = useState<{ subject: string; body: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const handleClientChange = (c: string) => {
+    setClient(c);
+    const found = clients.find((x) => x.name === c);
+    if (found?.email) {
+      setToEmail(found.email);
+    } else {
+      setToEmail("");
+    }
+  };
 
   const generate = () => {
     if (!client || !topic) {
@@ -72,10 +84,12 @@ export default function DraftEmail() {
     try {
       await saveEmailDraftAsync({
         client,
+        to: toEmail,
         topic,
         subject: draft.subject,
         body: draft.body,
         notes,
+        status: "Draft",
       });
       toast("Saved to client emails.");
       setPage("Client Emails");
@@ -84,6 +98,33 @@ export default function DraftEmail() {
       toast("Failed to save draft", "error");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const send = async () => {
+    if (!draft) return;
+    if (!toEmail.trim() || !toEmail.includes("@")) {
+      setError("Please provide a valid recipient email address.");
+      return;
+    }
+    setSending(true);
+    setError("");
+    try {
+      await sendEmailAsync({
+        client,
+        to: toEmail.trim(),
+        topic,
+        subject: draft.subject,
+        body: draft.body,
+        notes,
+      });
+      toast(`Email sent to ${client} (${toEmail}) successfully!`);
+      setPage("Client Emails");
+    } catch (err: any) {
+      console.error(err);
+      toast(err?.message || "Failed to send email via SMTP", "error");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -102,11 +143,21 @@ export default function DraftEmail() {
             <Field label="Client" required>
               <Select
                 value={client}
-                onChange={setClient}
+                onChange={handleClientChange}
                 options={clientNames}
                 placeholder="Choose a client"
               />
             </Field>
+            {client ? (
+              <Field label="Recipient email" helper="Auto-filled from client profile or enter manually">
+                <TextInput
+                  type="email"
+                  placeholder="client@example.com"
+                  value={toEmail}
+                  onChange={(e) => setToEmail(e.target.value)}
+                />
+              </Field>
+            ) : null}
             <Field label="Topic" required>
               <Select
                 value={topic}
@@ -152,8 +203,11 @@ export default function DraftEmail() {
                   onChange={(e) => setDraft({ ...draft, body: e.target.value })}
                 />
               </Field>
-              <div className="flex gap-2">
-                <Button variant="primary" onClick={save} disabled={saving}>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="primary" onClick={send} disabled={sending || saving}>
+                  {sending ? "Sending email..." : "Send email"}
+                </Button>
+                <Button onClick={save} disabled={saving || sending}>
                   {saving ? "Saving..." : "Save draft"}
                 </Button>
                 <Button

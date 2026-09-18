@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Mail } from "lucide-react";
 import { formatINR, type Fee } from "@/data/mockData";
 import { useStore } from "../store";
 import { LogFeeModal } from "../modals";
@@ -22,7 +22,7 @@ import {
 const TABS = ["All", "Invoiced", "Overdue", "Paid", "Draft"];
 
 export default function Fees() {
-  const { fees, updateFeeStatusAsync, removeFeeAsync, toast } = useStore();
+  const { fees, updateFeeStatusAsync, removeFeeAsync, clients, sendEmailAsync, toast } = useStore();
   const [open, setOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<Fee | null>(null);
   const [tab, setTab] = useState("All");
@@ -33,6 +33,28 @@ export default function Fees() {
     .reduce((s, f) => s + f.amount, 0);
   const overdueList = fees.filter((f) => f.status === "Overdue");
   const rows = tab === "All" ? fees : fees.filter((f) => f.status === tab);
+
+  const handleSendReminder = async (f: Fee) => {
+    const clientDoc = clients.find((c) => c.name === f.client);
+    const clientEmail = clientDoc?.email;
+    if (!clientEmail) {
+      toast(`No email address found for ${f.client}. Please check Client profile.`, "error");
+      return;
+    }
+    try {
+      await sendEmailAsync({
+        client: f.client,
+        to: clientEmail,
+        topic: "Fee outstanding reminder",
+        subject: `Fee reminder: ${f.forWhat} (${formatINR(f.amount)}) — Sthambhalliance`,
+        body: `Dear ${f.client},\n\nThis is a gentle reminder regarding the invoice for ${f.forWhat} amounting to ${formatINR(f.amount)}, due on ${f.due || "the current cycle"}.\n\nPlease arrange for payment at your earliest convenience.\n\nWarm regards,\nSthambhalliance Chartered Accountants`,
+      });
+      toast(`Fee reminder sent to ${clientEmail} successfully!`);
+    } catch (err: any) {
+      console.error(err);
+      toast(err?.message || "Failed to send email via SMTP", "error");
+    }
+  };
 
   return (
     <>
@@ -102,6 +124,11 @@ export default function Fees() {
                   <Td className="whitespace-nowrap text-right py-3 px-4">
                     <MoreMenu
                       items={[
+                        {
+                          label: "Send email reminder",
+                          icon: <Mail className="size-3.5" />,
+                          onClick: () => handleSendReminder(f),
+                        },
                         {
                           label: "Edit",
                           icon: <Pencil className="size-3.5" />,

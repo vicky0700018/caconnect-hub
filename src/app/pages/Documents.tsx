@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Share2, XCircle } from "lucide-react";
+import { Share2, XCircle, UploadCloud, ExternalLink, Trash2, FileText, Image as ImageIcon } from "lucide-react";
 import { type DocRequest } from "@/data/mockData";
 import { useStore } from "../store";
-import { RequestDocsModal, ShareDocModal } from "../modals";
+import { RequestDocsModal, ShareDocModal, UploadFileModal } from "../modals";
 import {
   Button,
   Card,
@@ -16,38 +16,46 @@ import {
   Th,
 } from "../ui";
 
-const files = [
-  {
-    id: "fl1",
-    name: "PAN of directors.pdf",
-    client: "Tushar Kumar",
-    request: "Company Registration",
-    uploaded: "12 Sept 2026",
-  },
-];
-
 export default function Documents() {
-  const { docRequests, removeDocRequestAsync, toast } = useStore();
-  const [open, setOpen] = useState(false);
+  const { docRequests, removeDocRequestAsync, files, removeFileAsync, toast } = useStore();
+  const [openRequestModal, setOpenRequestModal] = useState(false);
+  const [openUploadModal, setOpenUploadModal] = useState(false);
   const [tab, setTab] = useState("Requests");
   const [sharingDoc, setSharingDoc] = useState<DocRequest | null>(null);
 
   const awaiting = docRequests.filter((r) => r.status === "Open").length;
 
-  const handleCancel = async (id: string, clientName: string) => {
+  const handleCancelRequest = async (id: string, clientName: string) => {
     await removeDocRequestAsync(id);
     toast(`Request for ${clientName} cancelled.`);
+  };
+
+  const handleDeleteFile = async (id: string, fileName: string) => {
+    await removeFileAsync(id);
+    toast(`File "${fileName}" deleted.`);
+  };
+
+  const isImageFile = (url?: string, format?: string) => {
+    if (!url) return false;
+    if (format && ["jpg", "jpeg", "png", "webp", "gif", "svg"].includes(format.toLowerCase())) return true;
+    return url.match(/\.(jpeg|jpg|gif|png|webp)/i) !== null || url.includes("/image/upload/");
   };
 
   return (
     <>
       <PageHeader
-        title="Documents"
-        subtitle={`${awaiting} links awaiting upload`}
+        title="Documents & Files"
+        subtitle={`${awaiting} document requests awaiting upload · ${files.length} files saved on Cloudinary`}
         actions={
-          <Button variant="primary" onClick={() => setOpen(true)}>
-            + Request documents
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setOpenUploadModal(true)}>
+              <UploadCloud className="size-4 mr-1.5 inline" />
+              Upload file
+            </Button>
+            <Button variant="primary" onClick={() => setOpenRequestModal(true)}>
+              + Request documents
+            </Button>
+          </div>
         }
       />
 
@@ -72,7 +80,7 @@ export default function Documents() {
                   <Th>Received</Th>
                   <Th>Expires</Th>
                   <Th>Status</Th>
-                  <Th className="text-right w-24"></Th>
+                  <Th className="text-right w-28">Actions</Th>
                 </tr>
               </thead>
               <tbody>
@@ -121,26 +129,24 @@ export default function Documents() {
                         )}
                       </Td>
                       <Td className="py-3 px-4 whitespace-nowrap text-right">
-                        {!isCompleted && (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => setSharingDoc(r)}
-                              className="rounded p-1.5 text-muted-foreground hover:bg-surface-2 hover:text-foreground transition-colors"
-                              title="Share upload link"
-                            >
-                              <Share2 className="size-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleCancel(r.id, r.client)}
-                              className="rounded p-1.5 text-muted-foreground hover:bg-danger-soft hover:text-danger transition-colors"
-                              title="Cancel request"
-                            >
-                              <XCircle className="size-4" />
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSharingDoc(r)}
+                            className="rounded p-1.5 text-muted-foreground hover:bg-surface-2 hover:text-foreground transition-colors"
+                            title="Share upload link"
+                          >
+                            <Share2 className="size-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleCancelRequest(r.id, r.client)}
+                            className="rounded p-1.5 text-muted-foreground hover:bg-danger-soft hover:text-danger transition-colors"
+                            title="Cancel request"
+                          >
+                            <XCircle className="size-4" />
+                          </button>
+                        </div>
                       </Td>
                     </tr>
                   );
@@ -149,42 +155,113 @@ export default function Documents() {
             </TableWrap>
           ) : (
             <EmptyState
-              title="No requests yet"
+              title="No document requests yet"
               hint="Create a link your client can upload from."
+              action={
+                <Button variant="primary" onClick={() => setOpenRequestModal(true)}>
+                  + Request documents
+                </Button>
+              }
             />
           )
         ) : (
-          <TableWrap>
-            <thead>
-              <tr className="border-b border-border bg-surface">
-                <Th>File</Th>
-                <Th>Client</Th>
-                <Th>Request</Th>
-                <Th>Uploaded</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {files.map((f) => (
-                <tr
-                  key={f.id}
-                  className="border-b border-border/70 hover:bg-surface-2/40 transition-colors"
-                >
-                  <Td className="py-3 px-4 font-medium text-foreground text-[13px]">
-                    {f.name}
-                  </Td>
-                  <Td className="py-3 px-4 text-muted-foreground text-[13px]">
-                    {f.client}
-                  </Td>
-                  <Td className="py-3 px-4 text-muted-foreground text-[13px]">
-                    {f.request}
-                  </Td>
-                  <Td className="py-3 px-4 text-muted-foreground text-[13px]">
-                    {f.uploaded}
-                  </Td>
+          files.length ? (
+            <TableWrap>
+              <thead>
+                <tr className="border-b border-border bg-surface">
+                  <Th>File</Th>
+                  <Th>Client</Th>
+                  <Th>Category / Request</Th>
+                  <Th>Size</Th>
+                  <Th>Uploaded</Th>
+                  <Th className="text-right w-24">Actions</Th>
                 </tr>
-              ))}
-            </tbody>
-          </TableWrap>
+              </thead>
+              <tbody>
+                {files.map((f) => {
+                  const isImg = isImageFile(f.url, f.format);
+                  return (
+                    <tr
+                      key={f.id}
+                      className="border-b border-border/70 hover:bg-surface-2/40 transition-colors"
+                    >
+                      <Td className="py-3 px-4">
+                        <div className="flex items-center gap-2.5">
+                          {isImg ? (
+                            <img
+                              src={f.url}
+                              alt={f.name}
+                              className="size-8 rounded object-cover border border-border bg-surface-2 shrink-0"
+                            />
+                          ) : (
+                            <div className="size-8 rounded bg-surface-2 border border-border flex items-center justify-center text-muted-foreground shrink-0">
+                              <FileText className="size-4" />
+                            </div>
+                          )}
+                          <div>
+                            <a
+                              href={f.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-foreground text-[13px] hover:text-emerald-400 hover:underline inline-flex items-center gap-1"
+                            >
+                              <span>{f.name}</span>
+                              <ExternalLink className="size-3 text-muted-foreground" />
+                            </a>
+                            <p className="text-[11px] text-muted-foreground">Stored on Cloudinary</p>
+                          </div>
+                        </div>
+                      </Td>
+                      <Td className="py-3 px-4 text-muted-foreground text-[13px]">
+                        {f.client || "General"}
+                      </Td>
+                      <Td className="py-3 px-4 text-muted-foreground text-[13px]">
+                        {f.request || "Direct Upload"}
+                      </Td>
+                      <Td className="py-3 px-4 text-muted-foreground text-[12px] whitespace-nowrap">
+                        {f.size || "—"}
+                      </Td>
+                      <Td className="py-3 px-4 text-muted-foreground text-[12px] whitespace-nowrap">
+                        {f.uploaded || "—"}
+                      </Td>
+                      <Td className="py-3 px-4 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <a
+                            href={f.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded p-1.5 text-muted-foreground hover:bg-surface-2 hover:text-foreground transition-colors"
+                            title="Open / View on Cloudinary"
+                          >
+                            <ExternalLink className="size-4" />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteFile(f.id, f.name)}
+                            className="rounded p-1.5 text-muted-foreground hover:bg-danger-soft hover:text-danger transition-colors"
+                            title="Delete file"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </div>
+                      </Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </TableWrap>
+          ) : (
+            <EmptyState
+              title="No files uploaded yet"
+              hint="Upload images or documents directly to Cloudinary or send a document request to your client."
+              action={
+                <Button variant="primary" onClick={() => setOpenUploadModal(true)}>
+                  <UploadCloud className="size-4 mr-1.5 inline" />
+                  Upload file now
+                </Button>
+              }
+            />
+          )
         )}
       </Card>
 
@@ -194,7 +271,8 @@ export default function Documents() {
         request={sharingDoc}
       />
 
-      <RequestDocsModal open={open} onClose={() => setOpen(false)} />
+      <RequestDocsModal open={openRequestModal} onClose={() => setOpenRequestModal(false)} />
+      <UploadFileModal open={openUploadModal} onClose={() => setOpenUploadModal(false)} />
     </>
   );
 }
