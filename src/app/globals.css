@@ -98,6 +98,28 @@ html.light,
   --brand-foreground: oklch(0.99 0.002 260);
 }
 
+/* Reference site exact public-dark colors */
+.public-dark {
+  --background: #0a0b0e;
+  --foreground: #f4f4f5;
+  --card: #111319;
+  --surface: #141720;
+  --surface-2: #1a1e2a;
+  --rule: #202430;
+  --border: #232836;
+  --border-strong: #333a4d;
+  --muted: #1c202b;
+  --muted-foreground: #9ca3af;
+  --primary: #ffffff;
+  --primary-foreground: #0a0b0e;
+  --brand: #f59e0b;
+  --brand-foreground: #000000;
+  --danger: #ef4444;
+  --success: #10b981;
+  --warn: #f59e0b;
+  --ring: #f59e0b;
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

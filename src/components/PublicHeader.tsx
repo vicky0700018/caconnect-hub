@@ -54,11 +54,10 @@ export function PublicHeader({ activeNav }: { activeNav?: string }) {
         <nav className="hidden items-center gap-1 sm:flex">
           <Link
             href="/find-a-ca"
-            className={`inline-flex h-7 items-center justify-center gap-1 rounded-md px-2.5 text-[0.8rem] font-medium transition-colors ${
-              activeNav === "find-a-ca"
+            className={`inline-flex h-7 items-center justify-center gap-1 rounded-md px-2.5 text-[0.8rem] font-medium transition-colors ${activeNav === "find-a-ca"
                 ? "bg-muted/50 text-foreground font-semibold"
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-            }`}
+              }`}
           >
             Find a CA
           </Link>
@@ -89,7 +88,7 @@ export function PublicHeader({ activeNav }: { activeNav?: string }) {
           </Link>
           <Link
             href="/login"
-            className="inline-flex h-7 items-center justify-center gap-1 rounded-md bg-[#d97706] hover:bg-[#b45309] text-white px-3 text-[0.8rem] font-medium transition-all"
+            className="inline-flex h-7 items-center justify-center gap-1 rounded-md bg-brand hover:bg-brand/90 text-brand-foreground px-3 text-[0.8rem] font-medium transition-all"
           >
             Start free
           </Link>
@@ -98,7 +97,7 @@ export function PublicHeader({ activeNav }: { activeNav?: string }) {
         <div className="flex items-center gap-2 sm:hidden">
           <Link
             href="/login"
-            className="inline-flex h-7 items-center justify-center rounded-md bg-[#d97706] hover:bg-[#b45309] px-2.5 text-[0.8rem] font-medium text-white"
+            className="inline-flex h-7 items-center justify-center rounded-md bg-brand hover:bg-brand/90 px-2.5 text-[0.8rem] font-medium text-brand-foreground"
           >
             Start free
           </Link>

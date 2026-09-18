@@ -19,6 +19,7 @@ import {
   Store,
   ArrowRight,
   ChevronRight,
+  ChevronDown,
   Menu,
   X,
   Check,
@@ -59,7 +60,7 @@ function Logo({ className = "" }: { className?: string }) {
           CAConnect
         </span>
         <span className="mt-0.5 text-[0.625rem] font-medium tracking-wide text-muted-foreground">
-          by Bevritti
+          Hub
         </span>
       </div>
     </div>
@@ -306,22 +307,65 @@ const CA_DIRECTORY = [
   },
 ];
 
+/* ---------------- Notice AI Draft Text ---------------- */
+const NOTICE_DRAFT_TEXT = `To,
+The Assessing Officer
+Circle 2(1), Pune
+DIN: ITBA/AST/S/143(2)/2026-27/10982…
+
+Respected Sir/Madam,
+
+With reference to the captioned notice
+dated 12/08/2026 issued under section
+143(2) for Assessment Year 2026-27, the
+assessee respectfully submits as under.
+
+1. Large deduction claimed under
+   Chapter VI-A
+
+   The deduction claimed in the return
+   of income is ₹[state amount]…`;
+
 export default function Landing({ onLogin, onStart }: LandingProps) {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [activeHeroTab, setActiveHeroTab] = useState("dashboard");
   const [activeWorkflow, setActiveWorkflow] = useState("dashboard");
-  const [showFindCaModal, setShowFindCaModal] = useState(false);
   const [searchCity, setSearchCity] = useState("");
+  const [showFindCaModal, setShowFindCaModal] = useState(false);
+  const [isHeroHovered, setIsHeroHovered] = useState(false);
 
-  // Typing animation for drafting section
-  const [draftStep, setDraftStep] = useState(0);
+  // Auto-slide for Hero Demo Frame (advances every 2.5s unless hovered)
+  useEffect(() => {
+    if (isHeroHovered) return;
+    const interval = setInterval(() => {
+      setActiveHeroTab((current) => {
+        const currentIndex = DEMO_WORKFLOWS.findIndex((w) => w.id === current);
+        const nextIndex = (currentIndex + 1) % DEMO_WORKFLOWS.length;
+        return DEMO_WORKFLOWS[nextIndex].id;
+      });
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [isHeroHovered]);
+
+  // Typewriter auto-generation effect for "The Drafting" section
+  const [typedChars, setTypedChars] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setDraftStep((s) => (s >= 3 ? 0 : s + 1));
-    }, 2800);
-    return () => clearInterval(timer);
-  }, []);
+    let timer: NodeJS.Timeout;
+    if (typedChars < NOTICE_DRAFT_TEXT.length) {
+      const nextChar = NOTICE_DRAFT_TEXT[typedChars];
+      const speed =
+        nextChar === "\n" ? 110 : nextChar === "." || nextChar === ":" || nextChar === "," ? 70 : 20;
+      timer = setTimeout(() => {
+        setTypedChars((prev) => prev + 1);
+      }, speed);
+    } else {
+      timer = setTimeout(() => {
+        setTypedChars(0);
+      }, 4000);
+    }
+    return () => clearTimeout(timer);
+  }, [typedChars]);
 
   const filteredCAs = searchCity
     ? CA_DIRECTORY.filter(
@@ -333,7 +377,7 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
     : CA_DIRECTORY;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-brand selection:text-brand-foreground">
+    <div className="public-dark flex min-h-screen flex-col bg-background text-foreground selection:bg-brand selection:text-brand-foreground">
       {/* ---------------- Header ---------------- */}
       <header className="sticky top-0 z-30 border-b border-rule/70 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
@@ -381,7 +425,7 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
             </button>
             <button
               onClick={onStart}
-              className="inline-flex h-7 items-center justify-center gap-1 rounded-md bg-primary px-3 text-[0.8rem] font-medium text-primary-foreground transition-all hover:bg-primary/90"
+              className="inline-flex h-7 items-center justify-center gap-1 rounded-md bg-brand px-3 text-[0.8rem] font-medium text-brand-foreground transition-all hover:bg-brand/90"
             >
               Start free
             </button>
@@ -390,7 +434,7 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
           <div className="flex items-center gap-2 sm:hidden">
             <button
               onClick={onStart}
-              className="inline-flex h-7 items-center justify-center rounded-md bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground"
+              className="inline-flex h-7 items-center justify-center rounded-md bg-brand px-2.5 text-[0.8rem] font-medium text-brand-foreground hover:bg-brand/90"
             >
               Start free
             </button>
@@ -466,7 +510,7 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
         <section className="mx-auto w-full max-w-6xl px-6 pt-14 pb-16 sm:pt-20">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-brand text-xs font-semibold tracking-[0.14em] uppercase">
-              CAConnect by Bevritti
+              CAConnect Hub · Practice Management
             </p>
             <h1 className="mt-5 font-sans text-[2.5rem] leading-[1.04] font-semibold tracking-[-0.032em] text-balance sm:text-[3.5rem]">
               Practice management for modern CA firms.
@@ -479,7 +523,7 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <button
                 onClick={onStart}
-                className="cta-lift inline-flex h-12 items-center justify-center rounded-lg bg-primary px-7 text-base font-medium text-primary-foreground hover:bg-primary/90"
+                className="cta-lift inline-flex h-12 items-center justify-center rounded-lg bg-brand px-7 text-base font-semibold text-brand-foreground hover:bg-brand/90 shadow-md transition-all"
               >
                 Start free — no credit card
               </button>
@@ -498,7 +542,11 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
 
           {/* ---------------- Interactive Hero Product Demo Frame ---------------- */}
           <div className="mt-14">
-            <div className="product-frame bg-card">
+            <div
+              className="product-frame bg-card"
+              onMouseEnter={() => setIsHeroHovered(true)}
+              onMouseLeave={() => setIsHeroHovered(false)}
+            >
               {/* Frame Header */}
               <div className="flex items-center gap-3 border-b border-rule px-4 py-2.5">
                 <svg viewBox="0 0 32 32" className="size-4 shrink-0" aria-hidden="true">
@@ -541,7 +589,7 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
                       onClick={() => setActiveHeroTab(wf.id)}
                       className={`relative z-10 flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
                         active
-                          ? "bg-muted/60 text-foreground"
+                          ? "bg-muted/60 text-foreground border border-rule/50"
                           : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
@@ -555,86 +603,107 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
               </div>
 
               {/* Tab Screen Panel */}
-              <div className="relative min-h-[20rem] overflow-hidden bg-background/50 p-4 sm:p-5">
+              <div className="relative min-h-[22rem] overflow-hidden bg-background/50 p-4 sm:p-5">
                 {activeHeroTab === "dashboard" && (
-                  <div className="marketing-enter space-y-4">
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 border-b border-rule/60 pb-2.5">
+                  <div className="marketing-enter space-y-3.5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 border-b border-rule/60 pb-2">
                       <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                        Morning Dashboard
+                        DASHBOARD
                       </p>
                       <p className="tabular text-[11px] text-muted-foreground">
-                        Tuesday, 15 September 2026
+                        Tuesday, 15 September
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 divide-x divide-y divide-rule/60 rounded-md border border-rule/60 bg-card/40 sm:grid-cols-4 sm:divide-y-0">
+                    {/* Alert banner */}
+                    <div className="flex items-center gap-2 rounded border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                      <span className="text-sm">⚠️</span>
+                      <span className="font-medium">
+                        1 unread Income Tax alert - ₹13,17,699.50 outstanding across 10 clients
+                      </span>
+                    </div>
+
+                    {/* KPI Cards */}
+                    <div className="grid grid-cols-2 divide-x divide-y divide-rule/60 rounded border border-rule/60 bg-card/40 sm:grid-cols-4 sm:divide-y-0">
                       <div className="p-3">
-                        <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
-                          Overdue filings
+                        <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase font-semibold">
+                          OVERDUE FILINGS
                         </p>
-                        <p className="tabular mt-1 text-xl font-semibold text-danger">12</p>
+                        <p className="tabular mt-1 text-2xl font-bold text-danger">12</p>
                       </div>
                       <div className="p-3">
-                        <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
-                          Due in 7 days
+                        <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase font-semibold">
+                          DUE IN 7 DAYS
                         </p>
-                        <p className="tabular mt-1 text-xl font-semibold text-foreground">14</p>
+                        <p className="tabular mt-1 text-2xl font-bold text-foreground">14</p>
                       </div>
                       <div className="p-3">
-                        <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
-                          Active Clients
+                        <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase font-semibold">
+                          CLIENTS
                         </p>
-                        <p className="tabular mt-1 text-xl font-semibold text-foreground">22</p>
+                        <p className="tabular mt-1 text-2xl font-bold text-foreground">22</p>
                       </div>
                       <div className="p-3">
-                        <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
-                          Fees overdue
+                        <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase font-semibold">
+                          FEES OVERDUE
                         </p>
-                        <p className="tabular mt-1 text-xl font-semibold text-danger">₹12,000</p>
+                        <p className="tabular mt-1 text-2xl font-bold text-danger">₹12,000</p>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <p className="text-[11px] font-medium text-muted-foreground uppercase">
-                        Immediate attention
+                    {/* Immediate attention list */}
+                    <div className="space-y-1.5 pt-1">
+                      <p className="text-[10px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+                        NEEDS ATTENTION · PAST THE DUE DATE FIRST
                       </p>
                       {[
                         {
-                          client: "Sample Traders LLP",
-                          task: "GSTR-3B · August 2026",
-                          status: "2 days overdue",
-                          danger: true,
+                          title: "GSTR-3B",
+                          period: "Jul 2026",
+                          client: "Sumit Kumar",
+                          due: "27 days overdue",
+                          status: "In progress",
+                          statusType: "neutral",
                         },
                         {
-                          client: "Demo Industries Pvt Ltd",
-                          task: "TDS 24Q · Q2 Challan check",
-                          status: "Due in 3 days",
-                          danger: false,
+                          title: "GSTR-1",
+                          period: "Aug 2026",
+                          client: "Pinnacle Interiors",
+                          due: "5 days overdue",
+                          status: "Overdue",
+                          statusType: "danger",
                         },
                         {
-                          client: "Apex Foods Private Limited",
-                          task: "Tax Audit u/s 44AB Workpapers",
-                          status: "In partner review",
-                          danger: false,
+                          title: "GSTR-1",
+                          period: "Aug 2026",
+                          client: "Ganesh Steel Works",
+                          due: "5 days overdue",
+                          status: "Overdue",
+                          statusType: "danger",
                         },
-                      ].map((row) => (
+                      ].map((item, idx) => (
                         <div
-                          key={row.client}
-                          className="flex flex-wrap items-center justify-between gap-2 rounded border border-rule bg-card/50 px-3.5 py-2 text-xs"
+                          key={idx}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded border border-rule/70 bg-card/50 px-3.5 py-2 text-xs"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-foreground">{row.client}</span>
-                            <span className="text-muted-foreground">· {row.task}</span>
+                            <span className="font-semibold text-foreground">
+                              {item.title} <span className="font-normal text-muted-foreground">{item.period}</span>
+                            </span>
+                            <span className="text-muted-foreground">· {item.client}</span>
                           </div>
-                          <span
-                            className={
-                              row.danger
-                                ? "rounded bg-danger/10 px-2 py-0.5 text-[11px] font-medium text-danger"
-                                : "rounded bg-muted/60 px-2 py-0.5 text-[11px] text-muted-foreground"
-                            }
-                          >
-                            {row.status}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-danger text-[11px] font-medium">{item.due}</span>
+                            <span
+                              className={
+                                item.statusType === "danger"
+                                  ? "rounded bg-danger/15 px-2 py-0.5 text-[10px] font-medium text-danger"
+                                  : "rounded bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
+                              }
+                            >
+                              {item.status}
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -643,51 +712,84 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
 
                 {activeHeroTab === "clients" && (
                   <div className="marketing-enter space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between border-b border-rule/60 pb-2">
                       <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                        Client Master Register
+                        CLIENTS <span className="font-normal text-muted-foreground ml-2">24 active</span>
                       </p>
-                      <span className="text-xs text-muted-foreground">22 total clients</span>
+                      <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                        CLIENT RECORD
+                      </p>
                     </div>
-                    <div className="overflow-x-auto rounded border border-rule">
-                      <table className="w-full text-left text-xs">
-                        <thead className="border-b border-rule bg-card/60 text-muted-foreground">
-                          <tr>
-                            <th className="p-2.5 font-medium">Client Name</th>
-                            <th className="p-2.5 font-medium">Type</th>
-                            <th className="p-2.5 font-medium">PAN</th>
-                            <th className="p-2.5 font-medium">GSTIN</th>
-                            <th className="p-2.5 font-medium">KYC</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-rule/60">
-                          <tr>
-                            <td className="p-2.5 font-medium text-foreground">Sample Traders LLP</td>
-                            <td className="p-2.5 text-muted-foreground">LLP</td>
-                            <td className="p-2.5 font-mono text-[11px]">AAAFS1234K</td>
-                            <td className="p-2.5 font-mono text-[11px]">27AAAFS1234K1Z5</td>
-                            <td className="p-2.5 text-success">Verified</td>
-                          </tr>
-                          <tr>
-                            <td className="p-2.5 font-medium text-foreground">
-                              Demo Industries Pvt Ltd
-                            </td>
-                            <td className="p-2.5 text-muted-foreground">Company</td>
-                            <td className="p-2.5 font-mono text-[11px]">AACCD5678M</td>
-                            <td className="p-2.5 font-mono text-[11px]">27AACCD5678M1Z8</td>
-                            <td className="p-2.5 text-success">Verified</td>
-                          </tr>
-                          <tr>
-                            <td className="p-2.5 font-medium text-foreground">
-                              Kulkarni & Sons Jewellers
-                            </td>
-                            <td className="p-2.5 text-muted-foreground">Firm</td>
-                            <td className="p-2.5 font-mono text-[11px]">AABFK9876P</td>
-                            <td className="p-2.5 font-mono text-[11px]">27AABFK9876P1Z2</td>
-                            <td className="p-2.5 text-warn">Pending Aadhar</td>
-                          </tr>
-                        </tbody>
-                      </table>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+                      {/* Left: Client List */}
+                      <div className="space-y-1.5 md:col-span-6 border-r border-rule/60 pr-4">
+                        {[
+                          { name: "Sharma Textiles Pvt Ltd", pan: "AAFCS1234K", tags: "GST · TDS · ITR", active: true },
+                          { name: "Nimbus Logistics LLP", pan: "AAGFN0821P", tags: "GST · Audit", active: false },
+                          { name: "Meera Iyer", pan: "AKJPI9812L", tags: "ITR", active: false },
+                          { name: "Vaidya & Sons (HUF)", pan: "AAAHV4457C", tags: "ITR · Advance tax", active: false },
+                          { name: "Kulkarni Motors", pan: "ABKPK2298D", tags: "GST · ROC", active: false },
+                          { name: "Patil Agro Traders", pan: "AAGCP3318M", tags: "GST · TDS", active: false },
+                        ].map((c) => (
+                          <div
+                            key={c.name}
+                            className={`flex items-center justify-between rounded px-3 py-2 text-xs transition-colors ${
+                              c.active
+                                ? "bg-card border border-brand/40 text-foreground font-semibold"
+                                : "bg-card/30 text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            <span>{c.name}</span>
+                            <span className="font-mono text-[10px] text-muted-foreground/70">
+                              {c.pan} · {c.tags}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Right: Selected Client Record */}
+                      <div className="space-y-3 md:col-span-6 pl-2">
+                        <div>
+                          <h4 className="text-sm font-semibold text-foreground">
+                            Sharma Textiles Pvt Ltd
+                          </h4>
+                          <p className="font-mono text-[11px] text-muted-foreground mt-0.5">
+                            27AAFCS1234K1Z9
+                          </p>
+                        </div>
+
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between border-b border-rule/50 pb-1.5">
+                            <span className="text-muted-foreground">Upcoming filings</span>
+                            <span className="font-semibold text-foreground">4</span>
+                          </div>
+                          <div className="flex justify-between border-b border-rule/50 pb-1.5">
+                            <span className="text-muted-foreground">Documents pending</span>
+                            <span className="font-semibold text-foreground">2</span>
+                          </div>
+                          <div className="flex justify-between border-b border-rule/50 pb-1.5">
+                            <span className="text-muted-foreground">Fees outstanding</span>
+                            <span className="font-semibold text-foreground">₹18,000</span>
+                          </div>
+                          <div className="flex justify-between border-b border-rule/50 pb-1.5">
+                            <span className="text-muted-foreground">Assigned to</span>
+                            <span className="font-medium text-foreground">Priya N.</span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-1.5 pt-1">
+                          <span className="rounded bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                            GST
+                          </span>
+                          <span className="rounded bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                            TDS
+                          </span>
+                          <span className="rounded bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                            ITR
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -697,11 +799,11 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
                     <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                       Statutory Compliance Calendar
                     </p>
-                    <div className="grid gap-2 text-xs sm:grid-cols-2">
+                    <div className="grid gap-2.5 text-xs sm:grid-cols-2">
                       <div className="rounded border border-rule bg-card/40 p-3">
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-foreground">GSTR-3B (Monthly)</span>
-                          <span className="rounded bg-danger/10 px-1.5 py-0.5 text-[10px] text-danger">
+                          <span className="rounded bg-danger/10 px-1.5 py-0.5 text-[10px] text-danger font-medium">
                             Overdue
                           </span>
                         </div>
@@ -710,7 +812,7 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
                       <div className="rounded border border-rule bg-card/40 p-3">
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-foreground">TDS Form 26Q (Q2)</span>
-                          <span className="rounded bg-warn/10 px-1.5 py-0.5 text-[10px] text-warn">
+                          <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-300 font-medium">
                             In Progress
                           </span>
                         </div>
@@ -728,7 +830,7 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
                       <div className="rounded border border-rule bg-card/40 p-3">
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-foreground">Advance Tax Q2 (45%)</span>
-                          <span className="rounded bg-success/10 px-1.5 py-0.5 text-[10px] text-success">
+                          <span className="rounded bg-success/10 px-1.5 py-0.5 text-[10px] text-success font-medium">
                             Calculated
                           </span>
                         </div>
@@ -744,21 +846,21 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
                       <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                         GST 2A / 2B Match Run · Sample Traders LLP
                       </p>
-                      <span className="rounded bg-success/10 px-2 py-0.5 text-[11px] text-success">
+                      <span className="rounded bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
                         Match 94.2%
                       </span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-center text-xs">
                       <div className="rounded border border-rule bg-card/40 p-2.5">
-                        <p className="text-[10px] text-muted-foreground uppercase">Purchases ITC</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">Purchases ITC</p>
                         <p className="mt-1 font-semibold text-foreground">₹4,82,400</p>
                       </div>
                       <div className="rounded border border-rule bg-card/40 p-2.5">
-                        <p className="text-[10px] text-muted-foreground uppercase">GSTR-2B Available</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">GSTR-2B Available</p>
                         <p className="mt-1 font-semibold text-foreground">₹4,39,900</p>
                       </div>
                       <div className="rounded border border-danger/30 bg-danger/5 p-2.5">
-                        <p className="text-[10px] text-danger uppercase">Mismatch ITC</p>
+                        <p className="text-[10px] text-danger uppercase font-semibold">Mismatch ITC</p>
                         <p className="mt-1 font-semibold text-danger">₹42,500 (6 Invoices)</p>
                       </div>
                     </div>
@@ -779,7 +881,7 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
                           <p className="font-medium text-foreground">Section 194C · Contractors</p>
                           <p className="text-[11px] text-muted-foreground">12 Deductees · ₹3,40,000 paid</p>
                         </div>
-                        <span className="rounded bg-success/10 px-2 py-0.5 text-[11px] text-success">
+                        <span className="rounded bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
                           Challan Matched
                         </span>
                       </div>
@@ -788,7 +890,7 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
                           <p className="font-medium text-foreground">Section 194J · Professional Fees</p>
                           <p className="text-[11px] text-muted-foreground">4 Deductees · 1 PAN unverified</p>
                         </div>
-                        <span className="rounded bg-warn/10 px-2 py-0.5 text-[11px] text-warn">
+                        <span className="rounded bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-300">
                           206AA Check Required
                         </span>
                       </div>
@@ -851,15 +953,15 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
                     </p>
                     <div className="grid grid-cols-3 gap-2 text-center text-xs">
                       <div className="rounded border border-rule bg-card/40 p-2.5">
-                        <p className="text-[10px] text-muted-foreground uppercase">Total Billed</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">Total Billed</p>
                         <p className="mt-1 font-semibold text-foreground">₹4,86,000</p>
                       </div>
                       <div className="rounded border border-rule bg-card/40 p-2.5">
-                        <p className="text-[10px] text-muted-foreground uppercase">Received</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">Received</p>
                         <p className="mt-1 font-semibold text-success">₹3,74,000</p>
                       </div>
                       <div className="rounded border border-danger/30 bg-danger/5 p-2.5">
-                        <p className="text-[10px] text-danger uppercase">Outstanding</p>
+                        <p className="text-[10px] text-danger uppercase font-semibold">Outstanding</p>
                         <p className="mt-1 font-semibold text-danger">₹1,12,000</p>
                       </div>
                     </div>
@@ -874,10 +976,12 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
                 </p>
                 <div className="hidden items-center gap-1 sm:flex" aria-hidden="true">
                   {DEMO_WORKFLOWS.map((wf) => (
-                    <span
+                    <button
                       key={wf.id}
-                      className={`h-1 rounded-full transition-all duration-300 ${
-                        activeHeroTab === wf.id ? "w-4 bg-primary" : "w-1 bg-rule"
+                      onClick={() => setActiveHeroTab(wf.id)}
+                      aria-label={`Show ${wf.name}`}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        activeHeroTab === wf.id ? "w-5 bg-brand" : "w-1.5 bg-rule hover:bg-muted-foreground"
                       }`}
                     />
                   ))}
@@ -1053,8 +1157,9 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
           </div>
         </section>
 
-        {/* ---------------- The Product Workflows Section ---------------- */}
-        <section id="workflows" className="scroll-mt-16 border-t border-rule py-20 sm:py-24">
+        {/* ---------------- The Product Workflows / Features Section ---------------- */}
+        <section id="features" className="scroll-mt-16 border-t border-rule py-20 sm:py-24 relative">
+          <span id="workflows" className="block absolute -top-20 invisible pointer-events-none" />
           <div className="mx-auto w-full max-w-6xl px-6">
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-brand text-xs font-semibold tracking-[0.14em] uppercase">
@@ -1072,60 +1177,74 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
 
             <div className="mt-12">
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-12">
-                {/* Workflow Left Tabs */}
+                {/* Workflow Left Tabs Accordion */}
                 <div
                   role="tablist"
                   aria-orientation="vertical"
-                  className="scrollbar-none -mx-6 flex min-w-0 gap-2 overflow-x-auto px-6 lg:mx-0 lg:block lg:overflow-visible lg:px-0"
+                  className="flex flex-col border-t border-rule"
                 >
                   {WORKFLOW_ITEMS.map((item) => {
                     const Icon = item.icon;
                     const active = activeWorkflow === item.key;
                     return (
-                      <button
+                      <div
                         key={item.key}
-                        role="tab"
-                        onClick={() => setActiveWorkflow(item.key)}
-                        className={`group shrink-0 text-left transition-colors duration-150 lg:w-full rounded-lg border border-rule px-3 py-2 lg:rounded-none lg:border-0 lg:border-t lg:px-0 lg:py-4 lg:border-l-2 lg:first:border-t-0 ${
+                        className={`group border-b border-rule transition-colors ${
                           active
-                            ? "bg-card text-foreground lg:border-l-brand lg:bg-card/30"
-                            : "text-muted-foreground hover:text-foreground lg:border-l-transparent lg:hover:bg-card/40"
+                            ? "border-l-2 border-l-brand bg-card/40"
+                            : "border-l-2 border-l-transparent hover:bg-card/20"
                         }`}
                       >
-                        <div className="flex items-center gap-2.5 lg:px-3">
-                          <Icon
-                            className={`size-4 shrink-0 transition-colors ${
-                              active ? "text-brand" : "text-muted-foreground"
-                            }`}
-                          />
-                          <span className="font-sans text-sm font-semibold whitespace-nowrap lg:text-base">
-                            {item.title}
-                          </span>
-                          <ChevronRight
-                            className={`ml-auto hidden size-4 shrink-0 transition-transform duration-200 lg:block ${
-                              active ? "text-brand rotate-90" : "text-muted-foreground/50"
-                            }`}
-                          />
-                        </div>
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={active}
+                          onClick={() => setActiveWorkflow(item.key)}
+                          className="w-full text-left px-3.5 py-3 flex items-center justify-between transition-colors focus-visible:outline-none"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Icon
+                              className={`size-4 shrink-0 transition-colors ${
+                                active ? "text-brand" : "text-muted-foreground group-hover:text-foreground"
+                              }`}
+                            />
+                            <span
+                              className={`font-sans text-sm transition-colors ${
+                                active
+                                  ? "text-brand font-semibold"
+                                  : "text-muted-foreground font-medium group-hover:text-foreground"
+                              }`}
+                            >
+                              {item.title}
+                            </span>
+                          </div>
+                          {active ? (
+                            <ChevronDown className="size-4 text-brand shrink-0" />
+                          ) : (
+                            <ChevronRight className="size-4 text-muted-foreground/40 shrink-0 group-hover:text-muted-foreground" />
+                          )}
+                        </button>
 
-                        {/* Desktop Description Preview */}
-                        <div className={`mt-3 hidden lg:block lg:px-3 lg:pl-[1.65rem] ${active ? "" : "hidden"}`}>
-                          <p className="text-pretty text-sm leading-relaxed text-muted-foreground">
-                            {item.lede}
-                          </p>
-                          <ul className="mt-3 space-y-2">
-                            {item.points.map((pt, idx) => (
-                              <li
-                                key={idx}
-                                className="flex gap-2.5 text-pretty text-sm leading-relaxed text-muted-foreground"
-                              >
-                                <span className="bg-brand/60 mt-[0.6em] size-1 shrink-0 rounded-full" />
-                                <span>{pt}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </button>
+                        {/* Description Preview — rendered ONLY when active */}
+                        {active && (
+                          <div className="px-3.5 pb-4.5 pt-0.5 pl-[2.45rem] space-y-3 marketing-enter">
+                            <p className="text-pretty text-sm leading-relaxed text-muted-foreground">
+                              {item.lede}
+                            </p>
+                            <ul className="mt-2.5 space-y-2">
+                              {item.points.map((pt, idx) => (
+                                <li
+                                  key={idx}
+                                  className="flex items-start gap-2.5 text-pretty text-sm leading-relaxed text-muted-foreground"
+                                >
+                                  <span className="bg-brand mt-1.5 size-1.5 shrink-0 rounded-full" />
+                                  <span>{pt}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -1133,37 +1252,383 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
                 {/* Workflow Right Interactive Preview Screen */}
                 <div className="min-w-0 lg:sticky lg:top-24 lg:self-start">
                   <div className="product-frame bg-card">
-                    <div className="relative min-h-[20rem] overflow-hidden p-4 sm:p-5">
-                      <div className="marketing-enter">
-                        <div className="flex items-center justify-between border-b border-rule pb-2.5">
-                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            {WORKFLOW_ITEMS.find((w) => w.key === activeWorkflow)?.title} Screen
-                          </span>
-                          <span className="text-[11px] text-muted-foreground">Interactive Module</span>
-                        </div>
-
-                        <div className="mt-4 space-y-3">
-                          <div className="rounded border border-rule bg-background/60 p-3.5 text-xs">
-                            <p className="font-medium text-foreground">
-                              {WORKFLOW_ITEMS.find((w) => w.key === activeWorkflow)?.lede}
+                    <div className="relative min-h-[22rem] overflow-hidden p-4 sm:p-5">
+                      {activeWorkflow === "dashboard" && (
+                        <div className="marketing-enter space-y-3.5">
+                          <div className="flex flex-wrap items-baseline justify-between gap-x-3 border-b border-rule/60 pb-2">
+                            <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                              DASHBOARD
+                            </p>
+                            <p className="tabular text-[11px] text-muted-foreground">
+                              Tuesday, 15 September
                             </p>
                           </div>
 
-                          <div className="space-y-2">
-                            {WORKFLOW_ITEMS.find((w) => w.key === activeWorkflow)?.points.map(
-                              (pt, i) => (
-                                <div
-                                  key={i}
-                                  className="flex items-start gap-2.5 rounded border border-rule/70 bg-card/60 p-2.5 text-xs text-muted-foreground"
-                                >
-                                  <Check className="size-4 shrink-0 text-brand mt-0.5" />
-                                  <span className="leading-relaxed">{pt}</span>
+                          <div className="flex items-center gap-2 rounded border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                            <span className="text-sm">⚠️</span>
+                            <span className="font-medium">
+                              1 unread Income Tax alert - ₹13,17,699.50 outstanding across 10 clients
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 divide-x divide-y divide-rule/60 rounded border border-rule/60 bg-card/40 sm:grid-cols-4 sm:divide-y-0">
+                            <div className="p-3">
+                              <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase font-semibold">OVERDUE FILINGS</p>
+                              <p className="tabular mt-1 text-2xl font-bold text-danger">12</p>
+                            </div>
+                            <div className="p-3">
+                              <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase font-semibold">DUE IN 7 DAYS</p>
+                              <p className="tabular mt-1 text-2xl font-bold text-foreground">14</p>
+                            </div>
+                            <div className="p-3">
+                              <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase font-semibold">CLIENTS</p>
+                              <p className="tabular mt-1 text-2xl font-bold text-foreground">22</p>
+                            </div>
+                            <div className="p-3">
+                              <p className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase font-semibold">FEES OVERDUE</p>
+                              <p className="tabular mt-1 text-2xl font-bold text-danger">₹12,000</p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5 pt-1">
+                            <p className="text-[10px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+                              NEEDS ATTENTION · PAST THE DUE DATE FIRST
+                            </p>
+                            {[
+                              { title: "GSTR-3B", period: "Jul 2026", client: "Sumit Kumar", due: "27 days overdue", status: "In progress", danger: false },
+                              { title: "GSTR-1", period: "Aug 2026", client: "Pinnacle Interiors", due: "5 days overdue", status: "Overdue", danger: true },
+                              { title: "GSTR-1", period: "Aug 2026", client: "Ganesh Steel Works", due: "5 days overdue", status: "Overdue", danger: true },
+                            ].map((item, i) => (
+                              <div key={i} className="flex flex-wrap items-center justify-between gap-2 rounded border border-rule/70 bg-card/50 px-3.5 py-2 text-xs">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-foreground">{item.title} <span className="font-normal text-muted-foreground">{item.period}</span></span>
+                                  <span className="text-muted-foreground">· {item.client}</span>
                                 </div>
-                              ),
-                            )}
+                                <div className="flex items-center gap-2">
+                                  <span className="text-danger text-[11px] font-medium">{item.due}</span>
+                                  <span className={item.danger ? "rounded bg-danger/15 px-2 py-0.5 text-[10px] font-medium text-danger" : "rounded bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"}>
+                                    {item.status}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      </div>
+                      )}
+
+                      {activeWorkflow === "clients" && (
+                        <div className="marketing-enter space-y-3">
+                          <div className="flex items-center justify-between border-b border-rule/60 pb-2">
+                            <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                              CLIENTS <span className="font-normal text-muted-foreground ml-2">24 active</span>
+                            </p>
+                            <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                              CLIENT RECORD
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+                            <div className="space-y-1.5 md:col-span-6 border-r border-rule/60 pr-3">
+                              {[
+                                { name: "Sharma Textiles Pvt Ltd", pan: "AAFCS1234K", tags: "GST · TDS · ITR", active: true },
+                                { name: "Nimbus Logistics LLP", pan: "AAGFN0821P", tags: "GST · Audit", active: false },
+                                { name: "Meera Iyer", pan: "AKJPI9812L", tags: "ITR", active: false },
+                                { name: "Vaidya & Sons (HUF)", pan: "AAAHV4457C", tags: "ITR · Advance tax", active: false },
+                                { name: "Kulkarni Motors", pan: "ABKPK2298D", tags: "GST · ROC", active: false },
+                                { name: "Patil Agro Traders", pan: "AAGCP3318M", tags: "GST · TDS", active: false },
+                              ].map((c) => (
+                                <div
+                                  key={c.name}
+                                  className={`flex items-center justify-between rounded px-2.5 py-1.5 text-xs transition-colors ${
+                                    c.active
+                                      ? "bg-card border border-brand/40 text-foreground font-semibold"
+                                      : "bg-card/30 text-muted-foreground hover:text-foreground"
+                                  }`}
+                                >
+                                  <span className="truncate max-w-[130px]">{c.name}</span>
+                                  <span className="font-mono text-[10px] text-muted-foreground/70">
+                                    {c.pan}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="space-y-2.5 md:col-span-6 pl-1">
+                              <div>
+                                <h4 className="text-sm font-semibold text-foreground">Sharma Textiles Pvt Ltd</h4>
+                                <p className="font-mono text-[11px] text-muted-foreground mt-0.5">27AAFCS1234K1Z9</p>
+                              </div>
+
+                              <div className="space-y-2 text-xs">
+                                <div className="flex justify-between border-b border-rule/50 pb-1">
+                                  <span className="text-muted-foreground">Upcoming filings</span>
+                                  <span className="font-semibold text-foreground">4</span>
+                                </div>
+                                <div className="flex justify-between border-b border-rule/50 pb-1">
+                                  <span className="text-muted-foreground">Documents pending</span>
+                                  <span className="font-semibold text-foreground">2</span>
+                                </div>
+                                <div className="flex justify-between border-b border-rule/50 pb-1">
+                                  <span className="text-muted-foreground">Fees outstanding</span>
+                                  <span className="font-semibold text-foreground">₹18,000</span>
+                                </div>
+                                <div className="flex justify-between border-b border-rule/50 pb-1">
+                                  <span className="text-muted-foreground">Assigned to</span>
+                                  <span className="font-medium text-foreground">Priya N.</span>
+                                </div>
+                              </div>
+
+                              <div className="flex gap-1.5 pt-1">
+                                <span className="rounded bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-semibold text-amber-300">GST</span>
+                                <span className="rounded bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-semibold text-amber-300">TDS</span>
+                                <span className="rounded bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-semibold text-amber-300">ITR</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeWorkflow === "compliance" && (
+                        <div className="marketing-enter space-y-3">
+                          <div className="flex items-center justify-between border-b border-rule/60 pb-2">
+                            <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                              DEADLINES
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              <span className="text-danger font-semibold">2 overdue</span> · 5 due this week
+                            </p>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-[10px] font-semibold tracking-[0.1em] text-danger uppercase mb-1.5">
+                                OVERDUE
+                              </p>
+                              <div className="flex items-center justify-between rounded border border-danger/30 bg-danger/5 px-3 py-2 text-xs">
+                                <div>
+                                  <span className="font-semibold text-foreground">GSTR-3B</span>
+                                  <span className="text-muted-foreground ml-1">Aug 2026</span>
+                                  <p className="text-[11px] text-muted-foreground">Nimbus Logistics LLP</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-danger text-[11px] font-medium">2 days overdue</span>
+                                  <span className="rounded bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">In progress</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <p className="text-[10px] font-semibold tracking-[0.1em] text-muted-foreground uppercase mb-1.5">
+                                DUE IN SEVEN DAYS
+                              </p>
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-between rounded border border-rule/70 bg-card/50 px-3 py-2 text-xs">
+                                  <div>
+                                    <span className="font-semibold text-foreground">GSTR-1</span>
+                                    <span className="text-muted-foreground ml-1">Sep 2026</span>
+                                    <p className="text-[11px] text-muted-foreground">Sharma Textiles Pvt Ltd</p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-muted-foreground text-[11px]">in 3 days</span>
+                                    <span className="rounded bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">In progress</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between rounded border border-rule/70 bg-card/50 px-3 py-2 text-xs">
+                                  <div>
+                                    <span className="font-semibold text-foreground">TDS return (26Q)</span>
+                                    <span className="text-muted-foreground ml-1">Q2 FY2026-27</span>
+                                    <p className="text-[11px] text-muted-foreground">Sharma Textiles Pvt Ltd</p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-muted-foreground text-[11px]">in 6 days</span>
+                                    <span className="rounded bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">Pending</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between rounded border border-rule/70 bg-card/50 px-3 py-2 text-xs">
+                                  <div>
+                                    <span className="font-semibold text-foreground">ITR — audit case</span>
+                                    <span className="text-muted-foreground ml-1">AY 2026-27</span>
+                                    <p className="text-[11px] text-muted-foreground">Kulkarni Motors</p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-muted-foreground text-[11px]">in 12 days</span>
+                                    <span className="rounded bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">Pending</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeWorkflow === "gst" && (
+                        <div className="marketing-enter space-y-3">
+                          <div className="flex items-center justify-between border-b border-rule/60 pb-2">
+                            <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                              GST 2A / 2B RECONCILIATION · Aug 2026
+                            </p>
+                            <span className="rounded bg-success/15 border border-success/30 px-2 py-0.5 text-[11px] font-semibold text-success">
+                              Match 94.2%
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                            <div className="rounded border border-rule bg-card/40 p-2.5">
+                              <p className="text-[10px] text-muted-foreground uppercase font-semibold">Purchases ITC</p>
+                              <p className="mt-1 font-semibold text-foreground">₹4,82,400</p>
+                            </div>
+                            <div className="rounded border border-rule bg-card/40 p-2.5">
+                              <p className="text-[10px] text-muted-foreground uppercase font-semibold">GSTR-2B Available</p>
+                              <p className="mt-1 font-semibold text-foreground">₹4,39,900</p>
+                            </div>
+                            <div className="rounded border border-danger/30 bg-danger/5 p-2.5">
+                              <p className="text-[10px] text-danger uppercase font-semibold">Mismatch ITC</p>
+                              <p className="mt-1 font-semibold text-danger">₹42,500</p>
+                            </div>
+                          </div>
+                          <div className="space-y-1.5 pt-1 text-xs">
+                            <div className="flex items-center justify-between rounded border border-rule bg-card/40 p-2 text-[11px]">
+                              <span>Invoice #INV-9021 · TechFab Supplies</span>
+                              <span className="text-danger font-medium">Missing in 2B (₹24,000)</span>
+                            </div>
+                            <div className="flex items-center justify-between rounded border border-rule bg-card/40 p-2 text-[11px]">
+                              <span>Invoice #8841 · Delta Logistics</span>
+                              <span className="text-amber-300 font-medium">Rate mismatch 18% vs 12%</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeWorkflow === "tds" && (
+                        <div className="marketing-enter space-y-3">
+                          <div className="flex items-center justify-between border-b border-rule/60 pb-2">
+                            <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                              TDS RETURNS · Q2 FY2026-27
+                            </p>
+                            <span className="text-xs text-muted-foreground">Form 26Q & 24Q</span>
+                          </div>
+                          <div className="space-y-2 text-xs">
+                            <div className="flex items-center justify-between rounded border border-rule bg-card/40 p-3">
+                              <div>
+                                <p className="font-semibold text-foreground">Section 194C · Contractors</p>
+                                <p className="text-[11px] text-muted-foreground">12 Deductees · ₹3,40,000 paid · Challan Matched</p>
+                              </div>
+                              <span className="rounded bg-success/15 border border-success/30 px-2 py-0.5 text-[10px] font-semibold text-success">
+                                Valid
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between rounded border border-rule bg-card/40 p-3">
+                              <div>
+                                <p className="font-semibold text-foreground">Section 194J · Professional Fees</p>
+                                <p className="text-[11px] text-muted-foreground">4 Deductees · 1 PAN unverified</p>
+                              </div>
+                              <span className="rounded bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                                206AA Check
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between rounded border border-rule bg-card/40 p-3">
+                              <div>
+                                <p className="font-semibold text-foreground">Section 194I · Rent</p>
+                                <p className="text-[11px] text-muted-foreground">2 Deductees · ₹1,80,000 paid</p>
+                              </div>
+                              <span className="rounded bg-success/15 border border-success/30 px-2 py-0.5 text-[10px] font-semibold text-success">
+                                Matched
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeWorkflow === "audit" && (
+                        <div className="marketing-enter space-y-3">
+                          <div className="flex items-center justify-between border-b border-rule/60 pb-2">
+                            <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                              AUDIT WORKPAPERS · AY 2026-27
+                            </p>
+                            <span className="text-xs text-muted-foreground">Form 3CD Trail</span>
+                          </div>
+                          <div className="space-y-2 text-xs">
+                            {[
+                              { clause: "Clause 16: Amounts not credited to P&L", status: "Verified", by: "Partner Sign-off", success: true },
+                              { clause: "Clause 21(a): Disallowance u/s 40(a)", status: "Evidence Attached", by: "Senior Articled", success: true },
+                              { clause: "Clause 34: TDS Compliance Audit", status: "Workpaper in review", by: "Reviewer", success: false },
+                            ].map((c) => (
+                              <div
+                                key={c.clause}
+                                className="flex items-center justify-between rounded border border-rule bg-card/40 p-3"
+                              >
+                                <div>
+                                  <span className="font-semibold text-foreground">{c.clause}</span>
+                                  <p className="text-[11px] text-muted-foreground mt-0.5">{c.by}</p>
+                                </div>
+                                <span className={c.success ? "rounded bg-success/15 border border-success/30 px-2 py-0.5 text-[10px] font-semibold text-success" : "rounded bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"}>
+                                  {c.status}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeWorkflow === "notices" && (
+                        <div className="marketing-enter space-y-3">
+                          <div className="flex items-center justify-between border-b border-rule/60 pb-2">
+                            <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                              NOTICE TRACKER · AY 2026-27
+                            </p>
+                            <span className="text-xs text-muted-foreground">Income Tax Department</span>
+                          </div>
+                          <div className="rounded border border-rule bg-card/40 p-3.5 text-xs space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-brand text-sm">Notice u/s 143(2) Scrutiny</span>
+                              <span className="text-[11px] text-muted-foreground">Hearing: 24 Sept 2026</span>
+                            </div>
+                            <p className="font-mono text-[11px] text-muted-foreground">
+                              DIN: ITBA/AST/S/143(2)/2026-27/10982…
+                            </p>
+                            <div className="mt-3 flex items-center justify-between border-t border-rule/60 pt-2.5">
+                              <span className="rounded bg-brand/15 border border-brand/30 px-2 py-0.5 text-[10px] font-semibold text-brand">
+                                AI Draft Ready (30s)
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">Annexure ledger extracted</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeWorkflow === "fees" && (
+                        <div className="marketing-enter space-y-3">
+                          <div className="flex items-center justify-between border-b border-rule/60 pb-2">
+                            <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                              FIRM FEE REGISTER · FY 2026-27
+                            </p>
+                            <span className="text-xs text-muted-foreground">Current Summary</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                            <div className="rounded border border-rule bg-card/40 p-2.5">
+                              <p className="text-[10px] text-muted-foreground uppercase font-semibold">Total Billed</p>
+                              <p className="mt-1 font-semibold text-foreground">₹4,86,000</p>
+                            </div>
+                            <div className="rounded border border-rule bg-card/40 p-2.5">
+                              <p className="text-[10px] text-muted-foreground uppercase font-semibold">Received</p>
+                              <p className="mt-1 font-semibold text-success">₹3,74,000</p>
+                            </div>
+                            <div className="rounded border border-danger/30 bg-danger/5 p-2.5">
+                              <p className="text-[10px] text-danger uppercase font-semibold">Outstanding</p>
+                              <p className="mt-1 font-semibold text-danger">₹1,12,000</p>
+                            </div>
+                          </div>
+                          <div className="space-y-1.5 pt-1 text-xs">
+                            <div className="flex items-center justify-between rounded border border-rule bg-card/40 p-2 text-[11px]">
+                              <span>Sharma Textiles Pvt Ltd · GST & TDS Q2</span>
+                              <span className="text-danger font-medium">₹18,000 (Overdue 12d)</span>
+                            </div>
+                            <div className="flex items-center justify-between rounded border border-rule bg-card/40 p-2 text-[11px]">
+                              <span>Nimbus Logistics LLP · Statutory Audit</span>
+                              <span className="text-muted-foreground">₹25,000 (Billed)</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <p className="border-t border-rule px-4 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
                       {WORKFLOW_ITEMS.find((w) => w.key === activeWorkflow)?.lede}
@@ -1258,29 +1723,34 @@ issues:
                       AI-assisted
                     </span>
                   </p>
-                  <div className="relative px-5 py-5">
-                    <pre className="overflow-x-auto font-mono text-xs leading-relaxed whitespace-pre text-foreground">
-{`To,
-The Assessing Officer
-Circle 2(1), Pune
-DIN: ITBA/AST/S/143(2)/2026-27/10982…
-
-Respected Sir/Madam,
-
-With reference to the captioned notice
-dated 12/08/2026 issued under section
-143(2) for Assessment Year 2026-27, the
-assessee respectfully submits as under.
-
-1. Large deduction claimed under
-   Chapter VI-A
-
-   The deduction claimed in the return
-   of income is ₹[state amount]…`}
+                  <div className="relative px-5 py-5 min-h-[290px]">
+                    {/* Ghost pre to maintain layout height */}
+                    <pre
+                      aria-hidden="true"
+                      className="invisible font-mono text-xs leading-relaxed whitespace-pre select-none"
+                    >
+                      {NOTICE_DRAFT_TEXT}
                     </pre>
-                    <div className="mt-3 flex items-center gap-1.5 text-xs text-brand font-mono">
+
+                    {/* Live typed pre with blinking cursor */}
+                    <pre
+                      aria-hidden="true"
+                      className="absolute inset-x-5 top-5 overflow-x-auto font-mono text-xs leading-relaxed whitespace-pre text-foreground"
+                    >
+                      {NOTICE_DRAFT_TEXT.slice(0, typedChars)}
+                      <span className="cursor-blink ml-0.5 inline-block font-bold text-brand">|</span>
+                    </pre>
+
+                    <pre className="sr-only">{NOTICE_DRAFT_TEXT}</pre>
+
+                    {/* Status note when typing is progressing / done */}
+                    <div className="mt-4 flex items-center gap-1.5 text-xs text-brand font-mono">
                       <span className="cursor-blink font-bold">●</span>
-                      <span>Annexure reconciliations attached. Reviewing partner signature pending.</span>
+                      <span>
+                        {typedChars < NOTICE_DRAFT_TEXT.length
+                          ? "Generating clause analysis from DIN notice…"
+                          : "Annexure reconciliations attached. Reviewing partner signature pending."}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1415,13 +1885,6 @@ assessee respectfully submits as under.
                       </dd>
                     </div>
                   </dl>
-
-                  <button
-                    onClick={onStart}
-                    className="mt-6 w-full rounded border border-rule bg-surface py-2 text-center text-xs font-medium text-foreground transition-colors hover:bg-muted"
-                  >
-                    Start free
-                  </button>
                 </div>
               ))}
             </div>
@@ -1429,7 +1892,7 @@ assessee respectfully submits as under.
             <div className="mt-12 text-center">
               <button
                 onClick={onStart}
-                className="cta-lift inline-flex h-12 items-center justify-center rounded-lg bg-primary px-7 text-base font-medium text-primary-foreground hover:bg-primary/90"
+                className="cta-lift inline-flex h-12 items-center justify-center rounded-lg bg-brand px-7 text-base font-semibold text-brand-foreground hover:bg-brand/90 shadow-md transition-all"
               >
                 Start free — no credit card
               </button>
@@ -1460,7 +1923,7 @@ assessee respectfully submits as under.
               <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <button
                   onClick={onStart}
-                  className="cta-lift inline-flex h-12 items-center justify-center rounded-lg bg-primary px-7 text-base font-medium text-primary-foreground hover:bg-primary/90"
+                  className="cta-lift inline-flex h-12 items-center justify-center rounded-lg bg-brand px-7 text-base font-semibold text-brand-foreground hover:bg-brand/90 shadow-md transition-all"
                 >
                   Start using CAConnect
                 </button>
@@ -1480,8 +1943,8 @@ assessee respectfully submits as under.
       <footer className="border-t border-rule/70 bg-card/20">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-10 text-sm text-muted-foreground">
           <div>
-            <p className="font-medium text-foreground">CAConnect by Bevritti</p>
-            <p className="mt-1">© 2026 Bevritti. All rights reserved.</p>
+            <p className="font-medium text-foreground">CAConnect Hub</p>
+            <p className="mt-1">© 2026 CAConnect. All rights reserved.</p>
           </div>
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
             <Link
