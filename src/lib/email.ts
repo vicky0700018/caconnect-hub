@@ -2,9 +2,9 @@ import nodemailer from "nodemailer";
 
 const host = process.env.EMAIL_HOST || "smtp.gmail.com";
 const port = Number(process.env.EMAIL_PORT) || 587;
-const user = process.env.EMAIL_HOST_USER || "supportshopsphere@gmail.com";
-const pass = process.env.EMAIL_HOST_PASSWORD || "vefw tdis lewq lpso";
-const fromEmail = process.env.DEFAULT_FROM_EMAIL || "vs2734514@gmail.com";
+const user = (process.env.EMAIL_HOST_USER || "vs2734514@gmail.com").trim();
+const pass = (process.env.EMAIL_HOST_PASSWORD || "oiun uory dmcy ykuq").replace(/\s+/g, "");
+const fromEmail = (process.env.DEFAULT_FROM_EMAIL || "vs2734514@gmail.com").trim();
 
 /**
  * Creates and returns Nodemailer transporter
@@ -13,10 +13,10 @@ export function getEmailTransporter() {
   return nodemailer.createTransport({
     host,
     port,
-    secure: port === 465, // true for 465, false for other ports like 587
+    secure: port === 465,
     auth: {
-      user: user.trim(),
-      pass: pass.trim(),
+      user,
+      pass,
     },
     tls: {
       rejectUnauthorized: false,

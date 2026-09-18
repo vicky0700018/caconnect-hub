@@ -18,9 +18,10 @@ export async function POST(request: Request) {
     // If recipient email is not provided, look up client's email in database
     if (!recipientEmail && client) {
       const clientsCol = await getCollection("clients");
+      const escaped = client.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const clientDoc = await clientsCol.findOne({
         userId: user.userId,
-        name: client.trim(),
+        name: { $regex: new RegExp(`^${escaped}$`, "i") },
       });
       if (clientDoc && clientDoc.email) {
         recipientEmail = clientDoc.email.trim();

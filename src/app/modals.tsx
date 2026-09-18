@@ -912,17 +912,25 @@ export function ShareDocModal({
   };
 
   const handleWhatsApp = () => {
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(messageText)}`;
+    const clientDoc = clients.find(
+      (c) => c.name.trim().toLowerCase() === request.client.trim().toLowerCase()
+    );
+    let rawPhone = clientDoc?.phone?.replace(/[^0-9]/g, "") || "";
+    if (rawPhone.length === 10) {
+      rawPhone = "91" + rawPhone;
+    }
+    const textEncoded = encodeURIComponent(messageText);
+    const waUrl = rawPhone
+      ? `https://api.whatsapp.com/send?phone=${rawPhone}&text=${textEncoded}`
+      : `https://api.whatsapp.com/send?text=${textEncoded}`;
     window.open(waUrl, "_blank");
   };
 
   const handleSendEmail = async () => {
-    const clientDoc = clients.find((c) => c.name === request.client);
-    const clientEmail = clientDoc?.email;
-    if (!clientEmail) {
-      toast(`No email address found for ${request.client}. Please check Client profile.`, "error");
-      return;
-    }
+    const clientDoc = clients.find(
+      (c) => c.name.trim().toLowerCase() === request.client.trim().toLowerCase()
+    );
+    const clientEmail = clientDoc?.email?.trim();
 
     setSendingEmail(true);
     try {
@@ -941,7 +949,7 @@ export function ShareDocModal({
       if (!res.ok) {
         throw new Error(data.error || "Failed to send email");
       }
-      toast(`Upload link sent to ${clientEmail} successfully!`);
+      toast(`Upload link sent to ${data.email?.to || clientEmail || request.client} successfully!`);
     } catch (err: any) {
       console.error(err);
       toast(err?.message || "Failed to send email via SMTP", "error");

@@ -206,8 +206,11 @@ class MemoryCollection<T extends Document = Document> {
   }
 }
 
+const DEFAULT_MONGO_URI =
+  "mongodb+srv://kumarianisha32399_db_user:C7jyP5TMIjcEhcsZ@cluster0.e8sc6w4.mongodb.net/caconnect?retryWrites=true&w=majority";
+
 function getMongoUri(): string | null {
-  const envUri = process.env.MONGODB_URI || process.env.DATABASE_URL;
+  const envUri = process.env.MONGODB_URI || process.env.DATABASE_URL || DEFAULT_MONGO_URI;
   if (!envUri || envUri.includes("<db_password>")) {
     return null;
   }
@@ -220,26 +223,19 @@ export async function getClient(): Promise<MongoClient> {
     throw new Error("MONGODB_URI not configured or contains placeholder.");
   }
 
-  if (process.env.NODE_ENV === "development") {
-    if (!global._mongoClientPromise) {
-      const client = new MongoClient(uri, {
-        serverSelectionTimeoutMS: 2000,
-        connectTimeoutMS: 3000,
-      });
-      global._mongoClient = client;
-      global._mongoClientPromise = client.connect().catch((err) => {
-        global._mongoClientPromise = undefined;
-        throw err;
-      });
-    }
-    return global._mongoClientPromise;
-  } else {
+  if (!global._mongoClientPromise) {
     const client = new MongoClient(uri, {
-      serverSelectionTimeoutMS: 2000,
-      connectTimeoutMS: 3000,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+      maxPoolSize: 10,
     });
-    return client.connect();
+    global._mongoClient = client;
+    global._mongoClientPromise = client.connect().catch((err) => {
+      global._mongoClientPromise = undefined;
+      throw err;
+    });
   }
+  return global._mongoClientPromise;
 }
 
 export async function getDatabase(dbName = DB_NAME): Promise<Db> {
