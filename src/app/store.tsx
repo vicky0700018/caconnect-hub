@@ -53,6 +53,7 @@ type Toast = { id: string; text: string; kind: "success" | "error" };
 
 function useStoreValue() {
   const [page, setPage] = useState<Page>("Dashboard");
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Real Database state (starts clean / empty if DB has 0 records)
@@ -63,7 +64,7 @@ function useStoreValue() {
   const [fees, setFees] = useState<M.Fee[]>([]);
   const [tdsReturns, setTdsReturns] = useState<M.TdsReturn[]>([]);
   const [audits, setAudits] = useState<M.Audit[]>([]);
-  const [alerts, setAlerts] = useState<M.TaxAlert[]>([]);
+  const [alerts, setAlerts] = useState<M.TaxAlert[]>(M.taxAlerts);
   const [demands, setDemands] = useState<any[]>([]);
   const [estimates, setEstimates] = useState<M.AdvanceEstimate[]>([]);
   const [notices, setNotices] = useState<M.NoticeMatter[]>([]);
@@ -645,11 +646,33 @@ function useStoreValue() {
     }
   };
 
+  const viewClient = useCallback(
+    (clientIdentifier: string) => {
+      const trimmed = clientIdentifier.trim().toLowerCase();
+      const found = clients.find(
+        (c) =>
+          c.id === clientIdentifier ||
+          c.name.trim().toLowerCase() === trimmed ||
+          (c.pan && c.pan.trim().toLowerCase() === trimmed)
+      );
+      if (found) {
+        setSelectedClientId(found.id);
+      } else {
+        setSelectedClientId(clientIdentifier);
+      }
+      setPage("Clients");
+    },
+    [clients]
+  );
+
   const clientNames = useMemo(() => clients.map((c) => c.name), [clients]);
 
   return {
     page,
     setPage,
+    selectedClientId,
+    setSelectedClientId,
+    viewClient,
     loading,
     clients,
     setClients,

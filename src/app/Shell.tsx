@@ -57,7 +57,7 @@ const NAV_ITEMS: {
 ];
 
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-  const { page, setPage } = useStore();
+  const { page, setPage, setSelectedClientId } = useStore();
   return (
     <nav className="flex h-full flex-col bg-sidebar">
       <div className="flex h-14 items-center gap-2.5 border-b border-border px-4">
@@ -93,6 +93,9 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <button
               key={item.id}
               onClick={() => {
+                if (item.id === "Clients") {
+                  setSelectedClientId(null);
+                }
                 setPage(item.id);
                 onNavigate?.();
               }}

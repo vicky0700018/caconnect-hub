@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Pencil, Trash2 } from "lucide-react";
+import { Search, Pencil, Trash2, ArrowRight } from "lucide-react";
 import { SERVICES, type Client } from "@/data/mockData";
 import { useStore } from "../store";
 import { AddClientModal } from "../modals";
+import ClientDetail from "./ClientDetail";
 import {
   Button,
   Card,
@@ -18,11 +19,31 @@ import {
 } from "../ui";
 
 export default function Clients() {
-  const { clients, removeClientAsync, toast } = useStore();
+  const { clients, selectedClientId, setSelectedClientId, removeClientAsync, toast } = useStore();
   const [open, setOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [q, setQ] = useState("");
   const [service, setService] = useState("");
+
+  const activeClient = clients.find(
+    (c) =>
+      c.id === selectedClientId ||
+      c.name.trim().toLowerCase() === selectedClientId?.trim().toLowerCase() ||
+      (c.pan && c.pan.trim().toLowerCase() === selectedClientId?.trim().toLowerCase())
+  ) || (selectedClientId ? {
+    id: selectedClientId,
+    name: selectedClientId,
+    type: "Individual",
+    pan: "ABCDE1234F",
+    email: `${selectedClientId.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
+    phone: "9876543210",
+    services: ["ITR", "TDS", "GSTR-1"],
+    isAuditCase: true,
+  } : null);
+
+  if (activeClient) {
+    return <ClientDetail client={activeClient} onBack={() => setSelectedClientId(null)} />;
+  }
 
   const rows = clients.filter((c) => {
     const text = `${c.name} ${c.pan} ${c.phone ?? ""} ${c.gstin ?? ""}`.toLowerCase();
@@ -89,10 +110,20 @@ export default function Clients() {
               {rows.map((c) => (
                 <tr
                   key={c.id}
-                  className="border-b border-border/70 hover:bg-surface-2/40 transition-colors"
+                  className="border-b border-border/70 hover:bg-surface-2/40 transition-colors cursor-pointer group"
+                  onClick={() => setSelectedClientId(c.id)}
                 >
                   <Td className="py-3 px-4">
-                    <div className="font-semibold text-foreground text-[13px]">{c.name}</div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedClientId(c.id);
+                      }}
+                      className="font-semibold text-foreground group-hover:text-primary hover:underline text-[13px] text-left transition-colors cursor-pointer"
+                    >
+                      {c.name}
+                    </button>
                     {c.phone ? (
                       <div className="text-[12px] text-muted-foreground mt-0.5">{c.phone}</div>
                     ) : null}

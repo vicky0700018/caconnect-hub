@@ -45,7 +45,7 @@ function parseCsvLine(line: string): string[] {
 }
 
 export default function IncomeTax() {
-  const { alerts, demands, importDemandsAsync, toast } = useStore();
+  const { alerts, demands, importDemandsAsync, viewClient, toast } = useStore();
   const [file, setFile] = useState("");
   const [parsedDemands, setParsedDemands] = useState<any[]>([]);
   const [tab, setTab] = useState("Alerts");
@@ -272,7 +272,13 @@ export default function IncomeTax() {
                       <AlertTriangle className="size-4 text-amber-500 shrink-0 mt-0.5" />
                       <div>
                         <p className="text-[13px] font-medium text-foreground">
-                          {a.client}{" "}
+                          <button
+                            type="button"
+                            onClick={() => viewClient(a.client)}
+                            className="hover:underline hover:text-primary font-medium text-foreground transition-colors text-left inline-block cursor-pointer"
+                          >
+                            {a.client}
+                          </button>{" "}
                           <span className="font-normal text-muted-foreground">{a.ay}</span>
                         </p>
                         <p className="text-[13px] text-muted-foreground mt-0.5">{a.text}</p>
@@ -315,7 +321,15 @@ export default function IncomeTax() {
                 <tbody>
                   {demands.map((d) => (
                     <tr key={d.id} className="border-b border-border/70 hover:bg-surface-2/40 transition-colors">
-                      <Td className="font-medium text-foreground">{d.client}</Td>
+                      <Td className="font-medium text-foreground">
+                        <button
+                          type="button"
+                          onClick={() => viewClient(d.client)}
+                          className="hover:underline hover:text-primary font-medium text-foreground transition-colors text-left inline-block cursor-pointer"
+                        >
+                          {d.client}
+                        </button>
+                      </Td>
                       <Td className="text-muted-foreground">{d.ay}</Td>
                       <Td className="text-muted-foreground">{d.section}</Td>
                       <Td className="whitespace-nowrap text-muted-foreground">{d.raisedOn || d.raised}</Td>
