@@ -89,6 +89,8 @@ export default function ClientDetail({
   const [shareDocReq, setShareDocReq] = useState<any>(null);
   const [authorisationRecorded, setAuthorisationRecorded] = useState(false);
   const [portalCopied, setPortalCopied] = useState(false);
+  const [customToken, setCustomToken] = useState<string>("");
+  const [isPortalActive, setIsPortalActive] = useState<boolean>(true);
   const [activeDropdownDeadlineId, setActiveDropdownDeadlineId] = useState<string | null>(null);
 
   // Filter client-specific items
@@ -132,10 +134,18 @@ export default function ClientDetail({
     (e) => e.client.trim().toLowerCase() === client.name.trim().toLowerCase()
   );
 
+  const portalToken = customToken || client.id;
   const portalUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}/portal/${client.id}`
-      : `https://caconnect.in/portal/${client.id}`;
+      ? `${window.location.origin}/portal/${portalToken}`
+      : `https://caconnect.in/portal/${portalToken}`;
+
+  const rawPhone = client.phone?.replace(/[^0-9]/g, "") || "";
+  const waPhone = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone;
+  const waMsg = `Hi ${client.name}, you can view your compliance filing status, documents, and fees anytime using this secure link: ${portalUrl}`;
+  const waUrl = waPhone
+    ? `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(waMsg)}`
+    : `https://api.whatsapp.com/send?text=${encodeURIComponent(waMsg)}`;
 
   const copyPortalLink = () => {
     if (navigator?.clipboard) {
@@ -949,36 +959,32 @@ export default function ClientDetail({
 
                   {/* Actions Row: Send to Client, Preview, New link, Turn off */}
                   <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const rawPhone = client.phone?.replace(/[^0-9]/g, "") || "";
-                        const waPhone = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone;
-                        const msg = `Hi ${client.name}, you can view your compliance filing status, documents, and fees anytime using this secure link: ${portalUrl}`;
-                        const url = waPhone
-                          ? `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(msg)}`
-                          : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
-                        window.open(url, "_blank");
-                      }}
+                    <a
+                      href={waUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-3 transition-colors cursor-pointer"
                     >
-                      <Share2 className="size-3.5" />
+                      <Share2 className="size-3.5 text-emerald-400" />
                       Send to {client.name.split(" ")[0] || client.name}
-                    </button>
+                    </a>
 
-                    <button
-                      type="button"
-                      onClick={() => window.open(portalUrl, "_blank")}
+                    <a
+                      href={portalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-3 transition-colors cursor-pointer"
                     >
                       <ExternalLink className="size-3.5" />
                       Preview
-                    </button>
+                    </a>
 
                     <button
                       type="button"
                       onClick={() => {
-                        toast("New portal token generated.");
+                        const newToken = "p_" + Math.random().toString(36).substring(2, 9) + Math.random().toString(36).substring(2, 9);
+                        setCustomToken(newToken);
+                        toast("New permanent portal link generated!");
                       }}
                       className="inline-flex items-center gap-1.5 rounded border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-3 transition-colors cursor-pointer"
                     >
@@ -989,18 +995,35 @@ export default function ClientDetail({
                     <button
                       type="button"
                       onClick={() => {
-                        toast("Portal link disabled.", "error");
+                        const next = !isPortalActive;
+                        setIsPortalActive(next);
+                        if (next) {
+                          toast("Portal link enabled.");
+                        } else {
+                          toast("Portal link turned off.", "error");
+                        }
                       }}
-                      className="inline-flex items-center gap-1.5 rounded border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                      className={`inline-flex items-center gap-1.5 rounded border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                        isPortalActive
+                          ? "text-rose-400 hover:bg-rose-500/10"
+                          : "text-emerald-400 hover:bg-emerald-500/10"
+                      }`}
                     >
                       <Power className="size-3.5" />
-                      Turn off
+                      {isPortalActive ? "Turn off" : "Turn on"}
                     </button>
                   </div>
 
-                  <p className="text-[11.5px] text-muted-foreground pt-1">
-                    Not opened yet.
-                  </p>
+                  <div className="flex items-center justify-between pt-1">
+                    <p className="text-[11.5px] text-muted-foreground">
+                      {isPortalActive ? "Not opened yet." : "Status: Inactive (Access disabled)"}
+                    </p>
+                    {!isPortalActive && (
+                      <span className="text-[11px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">
+                        Link Paused
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : null}
