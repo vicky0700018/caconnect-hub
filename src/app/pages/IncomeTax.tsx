@@ -20,9 +20,34 @@ import {
   Th,
 } from "../ui";
 
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      result.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
 export default function IncomeTax() {
   const { alerts, demands, importDemandsAsync, toast } = useStore();
   const [file, setFile] = useState("");
+  const [parsedDemands, setParsedDemands] = useState<any[]>([]);
   const [tab, setTab] = useState("Alerts");
   const [error, setError] = useState("");
   const [importing, setImporting] = useState(false);
@@ -31,30 +56,138 @@ export default function IncomeTax() {
   const outstanding = demands.reduce((s, d) => s + (Number(d.amount) || 0), 0);
   const clientsWithDemands = new Set(demands.map((d) => d.client)).size;
 
+  const handleFileChange = async (fileObj: File | null) => {
+    if (!fileObj) {
+      setFile("");
+      setParsedDemands([]);
+      setError("");
+      return;
+    }
+    setFile(fileObj.name);
+    setError("");
+    setParsedDemands([]);
+
+    try {
+      const text = await fileObj.text();
+      const lines = text
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+
+      if (lines.length === 0) {
+        setError("Missing columns: pan, assessment_year, amount.");
+        return;
+      }
+
+      const headerRow = parseCsvLine(lines[0]);
+      const normalizedHeaders = headerRow.map((h) =>
+        h.toLowerCase().trim().replace(/['"]/g, "").replace(/[\s-]+/g, "_")
+      );
+
+      const hasPan = normalizedHeaders.some((h) =>
+        ["pan", "pan_number", "pan_no", "taxpayer_pan"].includes(h)
+      );
+      const hasAy = normalizedHeaders.some((h) =>
+        ["assessment_year", "ay", "assessmentyear", "assessment_yr"].includes(h)
+      );
+      const hasAmount = normalizedHeaders.some((h) =>
+        ["amount", "demand_amount", "outstanding_amount", "tax_amount", "demand"].includes(h)
+      );
+
+      const missing: string[] = [];
+      if (!hasPan) missing.push("pan");
+      if (!hasAy) missing.push("assessment_year");
+      if (!hasAmount) missing.push("amount");
+
+      if (missing.length > 0) {
+        setError(`Missing columns: ${missing.join(", ")}.`);
+        return;
+      }
+
+      const panIdx = normalizedHeaders.findIndex((h) =>
+        ["pan", "pan_number", "pan_no", "taxpayer_pan"].includes(h)
+      );
+      const ayIdx = normalizedHeaders.findIndex((h) =>
+        ["assessment_year", "ay", "assessmentyear", "assessment_yr"].includes(h)
+      );
+      const amountIdx = normalizedHeaders.findIndex((h) =>
+        ["amount", "demand_amount", "outstanding_amount", "tax_amount", "demand"].includes(h)
+      );
+      const dinIdx = normalizedHeaders.findIndex((h) => ["din", "din_no", "notice_din"].includes(h));
+      const sectionIdx = normalizedHeaders.findIndex((h) => ["section", "sec"].includes(h));
+      const raisedIdx = normalizedHeaders.findIndex((h) =>
+        ["raised_on", "raised", "date", "raised_date"].includes(h)
+      );
+      const clientIdx = normalizedHeaders.findIndex((h) =>
+        ["client", "client_name", "taxpayer", "name"].includes(h)
+      );
+
+      const parsed: any[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const row = parseCsvLine(lines[i]);
+        if (row.length === 0 || (row.length === 1 && !row[0])) continue;
+
+        const panVal = row[panIdx] || "";
+        const ayVal = row[ayIdx] || "AY 2025-26";
+        const rawAmount = (row[amountIdx] || "0").replace(/[^0-9.-]+/g, "");
+        const amountVal = parseFloat(rawAmount) || 0;
+        const dinVal = dinIdx !== -1 ? row[dinIdx] : "";
+        const sectionVal = sectionIdx !== -1 ? row[sectionIdx] : "143(1)";
+        const raisedVal =
+          raisedIdx !== -1 && row[raisedIdx]
+            ? row[raisedIdx]
+            : new Date().toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              });
+        const clientVal =
+          clientIdx !== -1 && row[clientIdx]
+            ? row[clientIdx]
+            : panVal
+            ? `PAN ${panVal}`
+            : fileObj.name.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
+
+        if (panVal || amountVal > 0) {
+          parsed.push({
+            client: clientVal,
+            pan: panVal.toUpperCase(),
+            ay: ayVal.startsWith("AY") ? ayVal : `AY ${ayVal}`,
+            amount: amountVal,
+            din: dinVal || "ITBA/AST/S/143(1)/2025-26/001",
+            section: sectionVal || "143(1)",
+            raised: raisedVal,
+            raisedOn: raisedVal,
+          });
+        }
+      }
+
+      setParsedDemands(parsed);
+    } catch (err) {
+      console.error("CSV parse error:", err);
+      setError("Failed to parse file. Please upload a valid CSV file.");
+    }
+  };
+
   const importRegister = async () => {
     if (!file) {
       setError("Choose a demand register file first.");
       return;
     }
+    if (error) {
+      return;
+    }
+    if (parsedDemands.length === 0) {
+      setError("No valid records found in the demand register.");
+      return;
+    }
     setError("");
     setImporting(true);
     try {
-      const newDemand = {
-        client: file.replace(/\.[^/.]+$/, "").replace(/_/g, " "),
-        pan: "ABCDE1234F",
-        ay: "AY2025-26",
-        amount: 145000,
-        din: "ITBA/AST/S/143(1)/2025-26/001",
-        section: "143(1)",
-        raised: new Date().toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }),
-      };
-      await importDemandsAsync([newDemand]);
+      await importDemandsAsync(parsedDemands);
       toast(`${file} imported — outstanding demands refreshed.`);
       setFile("");
+      setParsedDemands([]);
     } catch (err) {
       console.error(err);
       toast("Failed to import register", "error");
@@ -90,6 +223,7 @@ export default function IncomeTax() {
         <Card>
           <CardTitle>Import a demand register</CardTitle>
           <div className="space-y-3 p-4">
+            {error ? <p className="text-[12.5px] font-medium text-rose-500">{error}</p> : null}
             <Field
               label="Demand register"
               required
@@ -98,10 +232,10 @@ export default function IncomeTax() {
               <FileInput
                 fileName={file}
                 onPick={setFile}
+                onFileChange={handleFileChange}
                 accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
               />
             </Field>
-            {error ? <p className="text-[12px] text-danger">{error}</p> : null}
             <Button
               variant="primary"
               className="w-full inline-flex items-center justify-center gap-1.5"

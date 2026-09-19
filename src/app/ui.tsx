@@ -347,10 +347,12 @@ export function Checkbox({
 
 export function FileInput({
   onPick,
+  onFileChange,
   fileName,
   accept,
 }: {
-  onPick: (name: string) => void;
+  onPick?: (name: string) => void;
+  onFileChange?: (file: File | null) => void;
   fileName?: string;
   accept?: string;
 }) {
@@ -362,7 +364,11 @@ export function FileInput({
           type="file"
           className="hidden"
           accept={accept}
-          onChange={(e) => onPick(e.target.files?.[0]?.name ?? "")}
+          onChange={(e) => {
+            const f = e.target.files?.[0] || null;
+            onPick?.(f?.name ?? "");
+            onFileChange?.(f);
+          }}
         />
       </label>
       <span className="truncate text-[12.5px] text-muted-foreground select-none">
