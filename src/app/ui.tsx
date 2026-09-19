@@ -348,22 +348,25 @@ export function Checkbox({
 export function FileInput({
   onPick,
   fileName,
+  accept,
 }: {
   onPick: (name: string) => void;
   fileName?: string;
+  accept?: string;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <label className="inline-flex h-8 cursor-pointer items-center rounded border border-border bg-surface-2 px-3 text-[13px] hover:border-border-strong">
-        Browse file
+    <div className="field-input flex items-center gap-2.5 !py-1 !px-1.5 h-9">
+      <label className="inline-flex h-7 cursor-pointer items-center rounded border border-border bg-surface-2 px-2.5 text-[12.5px] font-medium text-foreground hover:bg-surface-3 hover:border-border-strong transition-colors shrink-0">
+        Browse
         <input
           type="file"
           className="hidden"
+          accept={accept}
           onChange={(e) => onPick(e.target.files?.[0]?.name ?? "")}
         />
       </label>
-      <span className="truncate text-[12px] text-muted-foreground">
-        {fileName || "No file selected"}
+      <span className="truncate text-[12.5px] text-muted-foreground select-none">
+        {fileName || "No file chosen"}
       </span>
     </div>
   );

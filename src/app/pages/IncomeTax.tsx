@@ -95,7 +95,11 @@ export default function IncomeTax() {
               required
               helper="Columns: pan, assessment_year, amount, and optionally din, section, raised_on."
             >
-              <FileInput fileName={file} onPick={setFile} />
+              <FileInput
+                fileName={file}
+                onPick={setFile}
+                accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
+              />
             </Field>
             {error ? <p className="text-[12px] text-danger">{error}</p> : null}
             <Button

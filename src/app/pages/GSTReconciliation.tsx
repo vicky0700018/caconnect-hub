@@ -89,14 +89,22 @@ export default function GSTReconciliation() {
               required
               helper="CSV with columns: supplier_gstin, invoice_number, invoice_date, invoice_amount"
             >
-              <FileInput fileName={register} onPick={setRegister} />
+              <FileInput
+                fileName={register}
+                onPick={setRegister}
+                accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              />
             </Field>
             <Field
               label="GSTR-2B JSON"
               required
               helper="Download from the GST portal → Returns → GSTR-2B → Download JSON"
             >
-              <FileInput fileName={json} onPick={setJson} />
+              <FileInput
+                fileName={json}
+                onPick={setJson}
+                accept=".json,application/json"
+              />
             </Field>
             {error ? <p className="text-[12px] text-danger">{error}</p> : null}
             <Button variant="primary" className="w-full" onClick={run} disabled={submitting}>

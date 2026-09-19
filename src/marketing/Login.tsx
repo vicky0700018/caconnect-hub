@@ -48,11 +48,27 @@ export default function Login({
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="flex h-16 items-center justify-between border-b border-border px-5 sm:px-8">
-        <button onClick={onBack} className="flex items-center gap-2">
-          <span className="grid h-7 w-7 place-items-center rounded-sm border border-brand/50 text-[11px] font-semibold text-brand">
-            CA
-          </span>
-          <span className="font-serif text-lg tracking-tight">CAConnect</span>
+        <button onClick={onBack} className="flex items-center gap-2.5 text-left">
+          <svg viewBox="0 0 32 32" className="size-6 shrink-0" aria-hidden="true">
+            <rect width="32" height="32" rx="7" className="fill-foreground"></rect>
+            <path
+              d="M10 7h8.5L23 11.5V25a1 1 0 0 1-1 1H10a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"
+              className="fill-background"
+            ></path>
+            <path d="M18.5 7 23 11.5h-4.5V7z" className="fill-muted-foreground"></path>
+            <path
+              d="m12.2 17.6 2.6 2.6 5-5.4"
+              fill="none"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="stroke-foreground"
+            ></path>
+          </svg>
+          <div className="flex flex-col leading-none">
+            <span className="font-semibold tracking-tight text-foreground text-[14px]">CAConnect</span>
+            <span className="mt-0.5 text-[10px] font-medium text-muted-foreground">by Bevritti</span>
+          </div>
         </button>
         <button
           onClick={onBack}

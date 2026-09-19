@@ -60,11 +60,27 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { page, setPage } = useStore();
   return (
     <nav className="flex h-full flex-col bg-sidebar">
-      <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-        <span className="grid h-6 w-6 place-items-center rounded-sm border border-border-strong text-[11px] font-semibold">
-          CA
-        </span>
-        <span className="font-serif text-lg tracking-tight">CAConnect</span>
+      <div className="flex h-14 items-center gap-2.5 border-b border-border px-4">
+        <svg viewBox="0 0 32 32" className="size-6 shrink-0" aria-hidden="true">
+          <rect width="32" height="32" rx="7" className="fill-foreground"></rect>
+          <path
+            d="M10 7h8.5L23 11.5V25a1 1 0 0 1-1 1H10a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"
+            className="fill-background"
+          ></path>
+          <path d="M18.5 7 23 11.5h-4.5V7z" className="fill-muted-foreground"></path>
+          <path
+            d="m12.2 17.6 2.6 2.6 5-5.4"
+            fill="none"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="stroke-foreground"
+          ></path>
+        </svg>
+        <div className="flex min-w-0 flex-col leading-none">
+          <span className="font-semibold tracking-tight text-foreground text-[14px]">CAConnect</span>
+          <span className="mt-0.5 text-[10px] font-medium text-muted-foreground">by Bevritti</span>
+        </div>
       </div>
       <div className="flex-1 space-y-1 overflow-y-auto p-2.5">
         {NAV_ITEMS.map((item) => {

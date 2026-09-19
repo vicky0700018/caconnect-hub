@@ -60,7 +60,7 @@ function Logo({ className = "" }: { className?: string }) {
           CAConnect
         </span>
         <span className="mt-0.5 text-[0.625rem] font-medium tracking-wide text-muted-foreground">
-          Hub
+          by Bevritti
         </span>
       </div>
     </div>
@@ -510,7 +510,7 @@ export default function Landing({ onLogin, onStart }: LandingProps) {
         <section className="mx-auto w-full max-w-6xl px-6 pt-14 pb-16 sm:pt-20">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-brand text-xs font-semibold tracking-[0.14em] uppercase">
-              CAConnect Hub · Practice Management
+              CAConnect by Bevritti · Practice Management
             </p>
             <h1 className="mt-5 font-sans text-[2.5rem] leading-[1.04] font-semibold tracking-[-0.032em] text-balance sm:text-[3.5rem]">
               Practice management for modern CA firms.
@@ -1943,7 +1943,7 @@ issues:
       <footer className="border-t border-rule/70 bg-card/20">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-10 text-sm text-muted-foreground">
           <div>
-            <p className="font-medium text-foreground">CAConnect Hub</p>
+            <p className="font-medium text-foreground">CAConnect by Bevritti</p>
             <p className="mt-1">© 2026 CAConnect. All rights reserved.</p>
           </div>
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
